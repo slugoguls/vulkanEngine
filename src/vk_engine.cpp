@@ -43,6 +43,7 @@ void VulkanEngine::init()
 
     // everything went fine
     _isInitialized = true;
+
 }
 
 void VulkanEngine::cleanup()
@@ -95,6 +96,11 @@ void VulkanEngine::run()
     }
 }
 
+
+
+
+
+
 // Vulkan Initialization functions
 
 void VulkanEngine::init_vulkan()
@@ -111,6 +117,38 @@ void VulkanEngine::init_vulkan()
 
 	_instance = vkb_inst.instance; //get the VkInstance handle
 	_debug_messenger = vkb_inst.debug_messenger; //get the debug messenger handle
+
+    SDL_Vulkan_CreateSurface(_window, _instance, &_surface); // create the window surface
+
+    //vulkan 1.3 features
+    VkPhysicalDeviceVulkan13Features features13{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
+    features13.synchronization2 = VK_TRUE; // we want to use the synchronization2 feature
+    features13.dynamicRendering = VK_TRUE; // we want to use dynamic rendering
+
+    //vulkan 1.2 features
+    VkPhysicalDeviceVulkan12Features features12{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
+    features12.descriptorIndexing = VK_TRUE; // we want to use descriptor indexing
+    features12.bufferDeviceAddress = VK_TRUE; // we want to use buffer device address
+
+    //use bootstrap to select a GPU
+    //We want a gpu that can write to the SDL surface and supports vulkan 1.3 with the correct features
+    vkb::PhysicalDeviceSelector selector{ vkb_inst };
+    vkb::PhysicalDevice physicalDevice = selector
+        .set_minimum_version(1, 3)
+        .set_required_features_13(features13)
+        .set_required_features_12(features12)
+        .set_surface(_surface)
+        .select()
+        .value();
+
+    //create the final vulkan device
+	vkb::DeviceBuilder deviceBuilder{ physicalDevice }; //create the device builder using the selected physical device
+
+	vkb::Device vkbDevice = deviceBuilder.build().value(); //create the device
+
+	//get the vulkan device handles
+	_device = vkbDevice.device;
+	_physicalDevice = physicalDevice.physical_device;
 
 }
 void VulkanEngine::init_swapchain()
