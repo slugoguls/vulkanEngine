@@ -50,6 +50,13 @@ void VulkanEngine::cleanup()
 {
     if (_isInitialized) {
 
+        destroy_swapchain();
+
+        vkDestroySurfaceKHR(_instance, _surface, nullptr);
+        vkDestroyDevice(_device, nullptr);
+
+        vkb::destroy_debug_utils_messenger(_instance, _debug_messenger);
+        vkDestroyInstance(_instance, nullptr);
         SDL_DestroyWindow(_window);
     }
 
@@ -163,7 +170,6 @@ void VulkanEngine::init_sync_structures()
 {
     //nothing yet
 }
-
 
 
 
