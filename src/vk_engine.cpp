@@ -35,6 +35,12 @@ void VulkanEngine::init()
         _windowExtent.height,
         window_flags);
 
+	// Vulkan Initialization
+	init_vulkan();
+	init_swapchain();
+	init_commands();
+	init_sync_structures();
+
     // everything went fine
     _isInitialized = true;
 }
@@ -87,4 +93,35 @@ void VulkanEngine::run()
 
         draw();
     }
+}
+
+// Vulkan Initialization functions
+
+void VulkanEngine::init_vulkan()
+{
+	vkb::InstanceBuilder builder; // from the bootstarap library and abstracts away some of the init code
+
+	auto inst_ret = builder.set_app_name("Vulkan Engine") //name of the application
+		.request_validation_layers(bUseValidationLayers) //Enable validation layers if needed
+		.use_default_debug_messenger() //Enable debug messenger if needed
+		.require_api_version(1, 3, 0) //Require at least Vulkan 1.3
+		.build(); // build the instance
+
+	vkb::Instance vkb_inst = inst_ret.value(); //get the instance or crash if it failed
+
+	_instance = vkb_inst.instance; //get the VkInstance handle
+	_debug_messenger = vkb_inst.debug_messenger; //get the debug messenger handle
+
+}
+void VulkanEngine::init_swapchain()
+{
+    //nothing yet
+}
+void VulkanEngine::init_commands()
+{
+    //nothing yet
+}
+void VulkanEngine::init_sync_structures()
+{
+    //nothing yet
 }
