@@ -105,9 +105,6 @@ void VulkanEngine::run()
 
 
 
-
-
-
 // Vulkan Initialization functions
 
 void VulkanEngine::init_vulkan()
@@ -157,6 +154,10 @@ void VulkanEngine::init_vulkan()
 	_device = vkbDevice.device;
 	_physicalDevice = physicalDevice.physical_device;
 
+	//use bootstrap to get the graphics queue
+	_graphicsQueue = vkbDevice.get_queue(vkb::QueueType::graphics).value();
+	_graphicsQueueFamily = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
+
 }
 void VulkanEngine::init_swapchain()
 {
@@ -164,7 +165,29 @@ void VulkanEngine::init_swapchain()
 }
 void VulkanEngine::init_commands()
 {
-    //nothing yet
+	// create a command pool for commands submitted to the graphics queue
+	//reset the command pool when a command buffer is finished executing
+    VkCommandPoolCreateInfo commandPoolInfo = {}; 
+	commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	commandPoolInfo.pNext = nullptr;
+	commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	commandPoolInfo.queueFamilyIndex = _graphicsQueueFamily; // we will submit to the graphics queue
+
+	// create command pools and command buffers for each frame
+    for (int i = 0; i < FRAME_OVERLAP; i++) {
+
+		VK_CHECK(vkCreateCommandPool(_device, &commandPoolInfo, nullptr, &_frames[i]._commandPool));
+
+        //allocate one default command buffer from the pool
+		VkCommandBufferAllocateInfo cmdAllocInfo = {};
+		cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		cmdAllocInfo.pNext = nullptr;
+		cmdAllocInfo.commandPool = _frames[i]._commandPool; //the pool to allocate from
+		cmdAllocInfo.commandBufferCount = 1;
+		cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; //we will use this command buffer directly from the queue
+
+		VK_CHECK(vkAllocateCommandBuffers(_device, &cmdAllocInfo, &_frames[i]._mainCommandBuffer));
+    }
 }
 void VulkanEngine::init_sync_structures()
 {
