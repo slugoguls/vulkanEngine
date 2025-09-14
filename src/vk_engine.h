@@ -28,4 +28,22 @@ public:
 
 	//run main loop
 	void run();
+
+
+	// Vulkan Initialization
+
+	VkInstance _instance; // vulkan library handle
+	VkDebugUtilsMessengerEXT _debug_messenger; // vulkan debug messenger handle
+	VkSurfaceKHR _surface; // window surface handle
+	VkPhysicalDevice _physicalDevice; // graphics card handle
+	VkDevice _device; // logical device handle
+
+private:
+
+	//VulkanInitialization
+	void init_vulkan();
+	void init_swapchain();
+	void init_commands();
+	void init_sync_structures();
+
 };

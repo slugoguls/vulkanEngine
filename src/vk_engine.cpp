@@ -7,9 +7,12 @@
 #include <vk_initializers.h>
 #include <vk_types.h>
 
+#include "VkBootstrap.h" // for VkBootstrap, simplifying the init code
+
 #include <chrono>
 #include <thread>
 
+constexpr bool bUseValidationLayers{ false };
 VulkanEngine* loadedEngine = nullptr;
 
 VulkanEngine& VulkanEngine::Get() { return *loadedEngine; }
