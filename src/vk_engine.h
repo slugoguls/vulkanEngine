@@ -5,9 +5,21 @@
 
 #include <vk_types.h>
 
-
 //constants
 constexpr unsigned int FRAME_OVERLAP = 2;
+
+
+// Per-frame data
+struct FrameData {
+
+	VkCommandPool _commandPool;
+	VkCommandBuffer _mainCommandBuffer;
+
+	//synchronization structures
+	VkSemaphore _swapchainSemaphore, _renderSemaphore;
+	VkFence _renderFence;
+};
+
 
 
 class VulkanEngine {
@@ -73,12 +85,4 @@ private:
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
 
-};
-
-
-// Per-frame data
-struct FrameData {
-
-	VkCommandPool _commandPool;
-	VkCommandBuffer _mainCommandBuffer;
 };
