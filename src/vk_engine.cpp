@@ -50,13 +50,22 @@ void VulkanEngine::cleanup()
 {
     if (_isInitialized) {
 
-        destroy_swapchain();
+		// wait until the device is idle before destroying everything
+		vkDeviceWaitIdle(_device);
 
-        vkDestroySurfaceKHR(_instance, _surface, nullptr);
-        vkDestroyDevice(_device, nullptr);
+		// destroy per-frame resources
+        // destroy command pool
+        for (int i = 0; i < FRAME_OVERLAP; i++) {
+			vkDestroyCommandPool(_device, _frames[i]._commandPool, nullptr);
+        }
 
-        vkb::destroy_debug_utils_messenger(_instance, _debug_messenger);
-        vkDestroyInstance(_instance, nullptr);
+		destroy_swapchain();
+
+		vkDestroySurfaceKHR(_instance, _surface, nullptr);
+		vkDestroyDevice(_device, nullptr);
+
+		vkb::destroy_debug_utils_messenger(_instance, _debug_messenger);
+		vkDestroyInstance(_instance, nullptr); 
         SDL_DestroyWindow(_window);
     }
 
@@ -165,26 +174,18 @@ void VulkanEngine::init_swapchain()
 }
 void VulkanEngine::init_commands()
 {
-	// create a command pool for commands submitted to the graphics queue
-	//reset the command pool when a command buffer is finished executing
-    VkCommandPoolCreateInfo commandPoolInfo = {}; 
-	commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	commandPoolInfo.pNext = nullptr;
-	commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	commandPoolInfo.queueFamilyIndex = _graphicsQueueFamily; // we will submit to the graphics queue
+    //create a command pool for commands submitted to the graphics queue.
+    //we also want the pool to allow for resetting of individual command buffers
+	//using vkinit helper function to abstract some of the vulkan init code
+    VkCommandPoolCreateInfo commandPoolInfo = vkinit::command_pool_create_info(_graphicsQueueFamily, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
 	// create command pools and command buffers for each frame
     for (int i = 0; i < FRAME_OVERLAP; i++) {
 
 		VK_CHECK(vkCreateCommandPool(_device, &commandPoolInfo, nullptr, &_frames[i]._commandPool));
 
-        //allocate one default command buffer from the pool
-		VkCommandBufferAllocateInfo cmdAllocInfo = {};
-		cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		cmdAllocInfo.pNext = nullptr;
-		cmdAllocInfo.commandPool = _frames[i]._commandPool; //the pool to allocate from
-		cmdAllocInfo.commandBufferCount = 1;
-		cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; //we will use this command buffer directly from the queue
+        // allocate the default command buffer that we will use for rendering
+		VkCommandBufferAllocateInfo cmdAllocInfo = vkinit::command_buffer_allocate_info(_frames[i]._commandPool, 1);
 
 		VK_CHECK(vkAllocateCommandBuffers(_device, &cmdAllocInfo, &_frames[i]._mainCommandBuffer));
     }
