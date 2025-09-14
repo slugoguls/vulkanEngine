@@ -31,12 +31,20 @@ public:
 
 
 	// Vulkan Initialization
-
 	VkInstance _instance; // vulkan library handle
 	VkDebugUtilsMessengerEXT _debug_messenger; // vulkan debug messenger handle
 	VkSurfaceKHR _surface; // window surface handle
 	VkPhysicalDevice _physicalDevice; // graphics card handle
 	VkDevice _device; // logical device handle
+
+
+	// Vulkan spawchain
+	VkSwapchainKHR _swapchain; // swapchain handle
+	VkFormat _swapchainImageFormat; // swapchain image format
+
+	std::vector<VkImage> _swapchainImages; // swapchain images handles
+	std::vector<VkImageView> _swapchainImageViews; // swapchain image views handles
+	VkExtent2D _swapchainExtent; // swapchain image extent
 
 private:
 
@@ -45,5 +53,9 @@ private:
 	void init_swapchain();
 	void init_commands();
 	void init_sync_structures();
+
+	//Swapchain commands
+	void create_swapchain(uint32_t width, uint32_t height);
+	void destroy_swapchain();
 
 };
