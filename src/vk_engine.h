@@ -29,7 +29,6 @@ struct DeletionQueue
 	}
 };
 
-
 // Per-frame data
 struct FrameData {
 
@@ -42,6 +41,14 @@ struct FrameData {
 
 	//Deletion queue
 	DeletionQueue _deletionQueue;
+};
+
+//Push Constants struct
+struct ComputePushConstants {
+	glm::vec4 data1;
+	glm::vec4 data2;
+	glm::vec4 data3;
+	glm::vec4 data4;
 };
 
 
