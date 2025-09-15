@@ -117,6 +117,12 @@ public:
 	VkPipeline _gradientPipeline;
 	VkPipelineLayout _gradientPipelineLayout;
 
+	// immediate submit structures
+	VkFence _immFence;
+	VkCommandBuffer _immCommandBuffer;
+	VkCommandPool _immCommandPool;
+	
+
 private:
 
 	//VulkanInitialization
@@ -131,6 +137,7 @@ private:
 
 	//draw function
 	void draw_background(VkCommandBuffer cmd);
+	void draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView);
 
 	//descriptor func
 	void init_descriptors();
@@ -138,6 +145,10 @@ private:
 	//Pipeline Funcs
 	void init_pipelines();
 	void init_background_pipelines();
+
+	//Immediate submit
+	void init_imgui();
+	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function);
 
 };
 
