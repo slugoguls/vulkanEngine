@@ -4,6 +4,7 @@
 #pragma once
 
 #include <vk_types.h>
+#include <vk_descriptors.h>
 
 //constants
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -106,6 +107,16 @@ public:
 	AllocatedImage _drawImage;
 	VkExtent2D _drawExtent;
 
+	//DescriptorAlloc
+	DescriptorAllocator globalDescriptorAllocator;
+
+	VkDescriptorSet _drawImageDescriptors;
+	VkDescriptorSetLayout _drawImageDescriptorLayout;
+
+	//Pipeline Builder
+	VkPipeline _gradientPipeline;
+	VkPipelineLayout _gradientPipelineLayout;
+
 private:
 
 	//VulkanInitialization
@@ -120,5 +131,13 @@ private:
 
 	//draw function
 	void draw_background(VkCommandBuffer cmd);
+
+	//descriptor func
+	void init_descriptors();
+
+	//Pipeline Funcs
+	void init_pipelines();
+	void init_background_pipelines();
+
 };
 
