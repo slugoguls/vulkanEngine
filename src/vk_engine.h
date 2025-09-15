@@ -9,6 +9,26 @@
 constexpr unsigned int FRAME_OVERLAP = 2;
 
 
+// Simple deletion queue for vulkan resources
+struct DeletionQueue
+{
+	std::deque<std::function<void()>> deletors;
+
+	void push_function(std::function<void()>&& function) {
+		deletors.push_back(function);
+	}
+
+	void flush() {
+		// reverse iterate the deletion queue to execute all the functions
+		for (auto it = deletors.rbegin(); it != deletors.rend(); it++) {
+			(*it)(); //call functors
+		}
+
+		deletors.clear();
+	}
+};
+
+
 // Per-frame data
 struct FrameData {
 
@@ -18,6 +38,9 @@ struct FrameData {
 	//synchronization structures
 	VkSemaphore _swapchainSemaphore, _renderSemaphore;
 	VkFence _renderFence;
+
+	//Deletion queue
+	DeletionQueue _deletionQueue;
 };
 
 
@@ -73,6 +96,16 @@ public:
 	VkQueue _graphicsQueue; // graphics queue handle
 	uint32_t _graphicsQueueFamily; // graphics queue family index
 
+	//Deletion queue
+	DeletionQueue _mainDeletionQueue;
+
+	//VMA allocator
+	VmaAllocator _allocator;
+
+	//draw resources
+	AllocatedImage _drawImage;
+	VkExtent2D _drawExtent;
+
 private:
 
 	//VulkanInitialization
@@ -85,4 +118,7 @@ private:
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
 
+	//draw function
+	void draw_background(VkCommandBuffer cmd);
 };
+
