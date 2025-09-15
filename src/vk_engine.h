@@ -51,6 +51,16 @@ struct ComputePushConstants {
 	glm::vec4 data4;
 };
 
+//Compute Effect struct
+struct ComputeEffect {
+	const char* name;
+
+	VkPipeline pipeline;
+	VkPipelineLayout layout;
+
+	ComputePushConstants data;
+};
+
 
 
 class VulkanEngine {
@@ -128,6 +138,10 @@ public:
 	VkFence _immFence;
 	VkCommandBuffer _immCommandBuffer;
 	VkCommandPool _immCommandPool;
+
+	//compute effects
+	std::vector<ComputeEffect> backgroundEffects;
+	int currentBackgroundEffect{ 0 };
 	
 
 private:
