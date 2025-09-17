@@ -23,7 +23,7 @@
 #include <chrono>
 #include <thread>
 
-constexpr bool bUseValidationLayers{ false };
+constexpr bool bUseValidationLayers{ true };
 VulkanEngine* loadedEngine = nullptr;
 
 VulkanEngine& VulkanEngine::Get() { return *loadedEngine; }

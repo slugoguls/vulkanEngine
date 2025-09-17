@@ -153,10 +153,10 @@ public:
 	VkPipelineLayout _meshPipelineLayout;
 	VkPipeline _meshPipeline;
 	GPUMeshBuffers rectangle;
+	GPUMeshBuffers uploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices); //uploads a mesh to the gpu and returns a struct containing the buffers
 
 	//test meshes
 	std::vector<std::shared_ptr<MeshAsset>> testMeshes;
-	
 
 private:
 
@@ -187,7 +187,6 @@ private:
 	//buffer functions
 	AllocatedBuffer create_buffer(size_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
 	void destroy_buffer(const AllocatedBuffer& buffer);
-	GPUMeshBuffers uploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices); //uploads a mesh to the gpu and returns a struct containing the buffers
 
 	//helper functions
 	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function); //Immediate submit
