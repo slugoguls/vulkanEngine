@@ -82,6 +82,11 @@ void VulkanEngine::cleanup()
 			_frames[i]._deletionQueue.flush(); // flush the deletion queue for this frame
         }
 
+        for (auto& mesh : testMeshes) {
+            destroy_buffer(mesh->meshBuffers.indexBuffer);
+            destroy_buffer(mesh->meshBuffers.vertexBuffer);
+        }
+
 		//flush the main deletion queue
 		_mainDeletionQueue.flush();
 
