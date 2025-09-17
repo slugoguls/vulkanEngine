@@ -187,6 +187,7 @@ private:
 	//helper functions
 	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function); //Immediate submit
 	void init_imgui(); //ImGui init
+	void init_default_data(); //default resources init
 
 };
 
