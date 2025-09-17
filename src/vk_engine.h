@@ -146,6 +146,11 @@ public:
 	//triangle pipeline
 	VkPipelineLayout _trianglePipelineLayout;
 	VkPipeline _trianglePipeline;
+
+	//mesh pipeline
+	VkPipelineLayout _meshPipelineLayout;
+	VkPipeline _meshPipeline;
+	GPUMeshBuffers rectangle;
 	
 
 private:
@@ -172,16 +177,16 @@ private:
 	void init_pipelines();
 	void init_background_pipelines();
 	void init_triangle_pipeline();
-	void init_imgui();
+	void init_mesh_pipeline();
 
 	//buffer functions
 	AllocatedBuffer create_buffer(size_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
 	void destroy_buffer(const AllocatedBuffer& buffer);
-
 	GPUMeshBuffers uploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices); //uploads a mesh to the gpu and returns a struct containing the buffers
 
 	//helper functions
 	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function); //Immediate submit
+	void init_imgui(); //ImGui init
 
 };
 
