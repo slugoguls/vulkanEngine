@@ -6,6 +6,8 @@
 #include <vk_types.h>
 #include <vk_descriptors.h>
 
+#include <vk_loader.h>// for loading meshes
+
 //constants
 constexpr unsigned int FRAME_OVERLAP = 2;
 
@@ -151,6 +153,9 @@ public:
 	VkPipelineLayout _meshPipelineLayout;
 	VkPipeline _meshPipeline;
 	GPUMeshBuffers rectangle;
+
+	//test meshes
+	std::vector<std::shared_ptr<MeshAsset>> testMeshes;
 	
 
 private:

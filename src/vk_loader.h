@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <filesystem>
 
+
 struct GeoSurface {
     uint32_t startIndex;
     uint32_t count;
@@ -17,3 +18,9 @@ struct MeshAsset {
 
 //forward declaration
 class VulkanEngine;
+
+//funcs
+std::optional<std::vector<std::shared_ptr<MeshAsset>>> loadGltfMeshes(VulkanEngine* engine, std::filesystem::path filePath);
+
+
+
