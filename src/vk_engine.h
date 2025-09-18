@@ -43,6 +43,19 @@ struct FrameData {
 
 	//Deletion queue
 	DeletionQueue _deletionQueue;
+
+	// Descriptor Allocator
+	DescriptorAllocatorGrowable _frameDescriptors;
+};
+
+//Scene data struct
+struct GPUSceneData {
+	glm::mat4 view;
+	glm::mat4 proj;
+	glm::mat4 viewproj;
+	glm::vec4 ambientColor;
+	glm::vec4 sunlightDirection; // w for sun power
+	glm::vec4 sunlightColor;
 };
 
 //Push Constants struct
@@ -162,6 +175,10 @@ public:
 
 	//test meshes
 	std::vector<std::shared_ptr<MeshAsset>> testMeshes;
+
+	//scene data
+	GPUSceneData sceneData;
+	VkDescriptorSetLayout _gpuSceneDataDescriptorLayout;
 
 private:
 
