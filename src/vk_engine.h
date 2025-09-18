@@ -146,9 +146,10 @@ public:
 	std::vector<ComputeEffect> backgroundEffects;
 	int currentBackgroundEffect{ 0 };
 
-	//triangle pipeline
+	/*triangle pipeline
 	VkPipelineLayout _trianglePipelineLayout;
 	VkPipeline _trianglePipeline;
+	*/
 
 	//mesh pipeline
 	VkPipelineLayout _meshPipelineLayout;
@@ -182,7 +183,7 @@ private:
 	//Pipeline Funcs
 	void init_pipelines();
 	void init_background_pipelines();
-	void init_triangle_pipeline();
+	//void init_triangle_pipeline();
 	void init_mesh_pipeline();
 
 	//buffer functions
