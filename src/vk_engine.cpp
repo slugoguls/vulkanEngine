@@ -331,6 +331,10 @@ void VulkanEngine::run()
             continue;
         }
 
+        if (resize_requested) {
+            resize_swapchain();
+        }
+
         // imgui new frame
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplSDL2_NewFrame();
@@ -905,6 +909,22 @@ void VulkanEngine::destroy_swapchain()
     for (VkImageView imageView : _swapchainImageViews) {
         vkDestroyImageView(_device, imageView, nullptr);
 	}
+}
+
+void VulkanEngine::resize_swapchain()
+{
+    vkDeviceWaitIdle(_device);
+
+    destroy_swapchain();
+
+    int w, h;
+    SDL_GetWindowSize(_window, &w, &h);
+    _windowExtent.width = w;
+    _windowExtent.height = h;
+
+    create_swapchain(_windowExtent.width, _windowExtent.height);
+
+    resize_requested = false;
 }
 
 
