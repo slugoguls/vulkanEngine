@@ -75,6 +75,8 @@ public:
 
 	struct SDL_Window* _window{ nullptr };
 
+	bool resize_requested{ false }; //resize request flag
+
 	static VulkanEngine& Get();
 
 	//initializes everything in the engine

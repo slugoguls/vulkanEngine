@@ -37,7 +37,7 @@ void VulkanEngine::init()
     // We initialize SDL and create a window with it.
     SDL_Init(SDL_INIT_VIDEO);
 
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN);
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
     _window = SDL_CreateWindow(
         "Vulkan Engine",
@@ -115,7 +115,11 @@ void VulkanEngine::draw()
 
 	// acquire the next image from the swapchain
 	uint32_t swapchainImageIndex;
-	VK_CHECK(vkAcquireNextImageKHR(_device, _swapchain, 1000000000, get_current_frame()._swapchainSemaphore, VK_NULL_HANDLE, &swapchainImageIndex));
+    VkResult e = vkAcquireNextImageKHR(_device, _swapchain, 1000000000, get_current_frame()._swapchainSemaphore, nullptr, &swapchainImageIndex);
+    if (e == VK_ERROR_OUT_OF_DATE_KHR) {
+        resize_requested = true;
+        return;
+    }
 
 	VkCommandBuffer cmd = get_current_frame()._mainCommandBuffer; // get the command buffer for this frame
 
@@ -193,7 +197,10 @@ void VulkanEngine::draw()
 
 	presentInfo.pImageIndices = &swapchainImageIndex; //which image we want to present
 
-	VK_CHECK(vkQueuePresentKHR(_graphicsQueue, &presentInfo)); // put the image in the window
+    VkResult presentResult = vkQueuePresentKHR(_graphicsQueue, &presentInfo);
+    if (presentResult == VK_ERROR_OUT_OF_DATE_KHR) {
+        resize_requested = true;
+    }
 
     //increase the number of frames drawn
     _frameNumber++;
@@ -839,8 +846,9 @@ void VulkanEngine::init_mesh_pipeline()
     pipelineBuilder.set_cull_mode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
     //no multisampling
     pipelineBuilder.set_multisampling_none();
-    //no blending
-    pipelineBuilder.disable_blending();
+
+    //pipelineBuilder.disable_blending();
+	pipelineBuilder.enable_blending_additive(); //try additive blending
 
     //pipelineBuilder.disable_depthtest();
     pipelineBuilder.enable_depthtest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
