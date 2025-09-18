@@ -130,8 +130,8 @@ void VulkanEngine::draw()
 	VkCommandBufferBeginInfo cmdBeginInfo = vkinit::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 	// set the size of the draw extent
-    _drawExtent.width = _drawImage.imageExtent.width;
-    _drawExtent.height = _drawImage.imageExtent.height;
+    _drawExtent.height = std::min(_swapchainExtent.height, _drawImage.imageExtent.height) * renderScale;
+    _drawExtent.width = std::min(_swapchainExtent.width, _drawImage.imageExtent.width) * renderScale;
 
 	VK_CHECK(vkBeginCommandBuffer(cmd, &cmdBeginInfo)); // start recording the command buffer
 
@@ -341,6 +341,8 @@ void VulkanEngine::run()
         ImGui::NewFrame();
 
         if (ImGui::Begin("background")) {
+
+			ImGui::SliderFloat("Render Scale", &renderScale, 0.3f, 1.f); // adjust render scale
 
             ComputeEffect& selected = backgroundEffects[currentBackgroundEffect];
 

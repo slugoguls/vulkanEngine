@@ -71,7 +71,7 @@ public:
 	bool _isInitialized{ false };
 	int _frameNumber {0};
 	bool stop_rendering{ false };
-	VkExtent2D _windowExtent{ 1700 , 900 };
+	VkExtent2D _windowExtent{ 1920 , 1080 };
 
 	struct SDL_Window* _window{ nullptr };
 
@@ -127,7 +127,8 @@ public:
 	//draw resources
 	AllocatedImage _drawImage;
 	AllocatedImage _depthImage;
-	VkExtent2D _drawExtent;
+	VkExtent2D _drawExtent; //size of the draw image
+	float renderScale = 1.f; //scale of the render resolution compared to the window resolution
 
 	//DescriptorAlloc
 	DescriptorAllocator globalDescriptorAllocator;
