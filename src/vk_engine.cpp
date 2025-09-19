@@ -250,7 +250,18 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _meshPipeline);
 
-    //set dynamic viewport and scissor
+    //bind a texture
+    VkDescriptorSet imageSet = get_current_frame()._frameDescriptors.allocate(_device, _singleImageDescriptorLayout);
+    {
+        DescriptorWriter writer;
+        writer.write_image(0, _errorCheckerboardImage.imageView, _defaultSamplerNearest, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+
+        writer.update_set(_device, imageSet);
+    }
+
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _meshPipelineLayout, 0, 1, &imageSet, 0, nullptr);
+
+  /*  //set dynamic viewport and scissor
     VkViewport viewport = {};
     viewport.x = 0;
     viewport.y = 0;
@@ -269,11 +280,12 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
 
     vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-    GPUDrawPushConstants push_constants;
-    push_constants.worldMatrix = glm::mat4{ 1.f };
+  */
+    //GPUDrawPushConstants push_constants;
+    //push_constants.worldMatrix = glm::mat4{ 1.f };
     //push_constants.vertexBuffer = rectangle.vertexBufferAddress;
 
-    vkCmdPushConstants(cmd, _meshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GPUDrawPushConstants), &push_constants);
+    //vkCmdPushConstants(cmd, _meshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GPUDrawPushConstants), &push_constants);
     
     //vkCmdBindIndexBuffer(cmd, rectangle.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
     //vkCmdDrawIndexed(cmd, 6, 1, 0, 0, 0);
@@ -286,6 +298,7 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
     // to opengl and gltf axis
     projection[1][1] *= -1;
 
+    GPUDrawPushConstants push_constants;
     push_constants.worldMatrix = projection * view;
 
     push_constants.vertexBuffer = testMeshes[2]->meshBuffers.vertexBufferAddress;
@@ -851,19 +864,19 @@ void VulkanEngine::init_background_pipelines()
 void VulkanEngine::init_mesh_pipeline()
 {
     VkShaderModule triangleFragShader;
-    if (!vkutil::load_shader_module("../shaders/colored_triangle.frag.spv", _device, &triangleFragShader)) {
-        fmt::print("Error when building the triangle fragment shader module");
+    if (!vkutil::load_shader_module("../shaders/tex_image.frag.spv", _device, &triangleFragShader)) {
+        fmt::print("Error when building the fragment shader \n");
     }
     else {
-        fmt::print("Triangle fragment shader succesfully loaded");
+        fmt::print("Triangle fragment shader succesfully loaded \n");
     }
 
     VkShaderModule triangleVertexShader;
     if (!vkutil::load_shader_module("../shaders/colored_triangle_mesh.vert.spv", _device, &triangleVertexShader)) {
-        fmt::print("Error when building the triangle vertex shader module");
+        fmt::print("Error when building the vertex shader \n");
     }
     else {
-        fmt::print("Triangle vertex shader succesfully loaded");
+        fmt::print("Triangle vertex shader succesfully loaded \n");
     }
 
     VkPushConstantRange bufferRange{};
@@ -874,7 +887,8 @@ void VulkanEngine::init_mesh_pipeline()
     VkPipelineLayoutCreateInfo pipeline_layout_info = vkinit::pipeline_layout_create_info();
     pipeline_layout_info.pPushConstantRanges = &bufferRange;
     pipeline_layout_info.pushConstantRangeCount = 1;
-
+    pipeline_layout_info.pSetLayouts = &_singleImageDescriptorLayout;
+    pipeline_layout_info.setLayoutCount = 1;
     VK_CHECK(vkCreatePipelineLayout(_device, &pipeline_layout_info, nullptr, &_meshPipelineLayout));
 
     PipelineBuilder pipelineBuilder;
@@ -892,8 +906,8 @@ void VulkanEngine::init_mesh_pipeline()
     //no multisampling
     pipelineBuilder.set_multisampling_none();
 
-    //pipelineBuilder.disable_blending();
-	pipelineBuilder.enable_blending_additive(); //try additive blending
+    pipelineBuilder.disable_blending();
+	//pipelineBuilder.enable_blending_additive(); //try additive blending
 
     //pipelineBuilder.disable_depthtest();
     pipelineBuilder.enable_depthtest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
