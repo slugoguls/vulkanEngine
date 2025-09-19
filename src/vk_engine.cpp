@@ -650,10 +650,10 @@ void VulkanEngine::init_descriptors()
     //create a descriptor pool that will hold 10 sets with 1 image each
     std::vector<DescriptorAllocator::PoolSizeRatio> sizes =
     {
-        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 }
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
     };
 
-    globalDescriptorAllocator.init_pool(_device, 10, sizes);
+    globalDescriptorAllocator.init(_device, 10, sizes);
 
     //make the descriptor set layout for our compute draw
     {
@@ -672,7 +672,7 @@ void VulkanEngine::init_descriptors()
 
     //make sure both the descriptor allocator and the new layout get cleaned up properly
     _mainDeletionQueue.push_function([&]() {
-        globalDescriptorAllocator.destroy_pool(_device);
+        globalDescriptorAllocator.destroy_pools(_device);
 
         vkDestroyDescriptorSetLayout(_device, _drawImageDescriptorLayout, nullptr);
         });

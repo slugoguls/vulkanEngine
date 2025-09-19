@@ -176,7 +176,7 @@ public:
 	float renderScale = 1.f; //scale of the render resolution compared to the window resolution
 
 	//DescriptorAlloc
-	DescriptorAllocator globalDescriptorAllocator;
+	DescriptorAllocatorGrowable globalDescriptorAllocator;
 
 	VkDescriptorSet _drawImageDescriptors;
 	VkDescriptorSetLayout _drawImageDescriptorLayout;
