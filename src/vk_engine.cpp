@@ -718,6 +718,7 @@ void VulkanEngine::init_pipelines()
     // GRAPHICS PIPELINES
     //init_triangle_pipeline();
     init_mesh_pipeline();
+    metalRoughMaterial.build_pipelines(this);
 }
 
 void VulkanEngine::init_background_pipelines()
