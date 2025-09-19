@@ -189,6 +189,8 @@ public:
 	VkSampler _defaultSamplerLinear;
 	VkSampler _defaultSamplerNearest;
 
+	VkDescriptorSetLayout _singleImageDescriptorLayout; // layout for a single image sampler
+
 
 private:
 
