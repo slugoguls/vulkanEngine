@@ -223,6 +223,10 @@ public:
 
 	VkDescriptorSetLayout _singleImageDescriptorLayout; // layout for a single image sampler
 
+	//default material
+	MaterialInstance defaultData;
+	GLTFMetallic_Roughness metalRoughMaterial;
+
 
 private:
 
