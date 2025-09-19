@@ -180,6 +180,16 @@ public:
 	GPUSceneData sceneData;
 	VkDescriptorSetLayout _gpuSceneDataDescriptorLayout;
 
+	//base textures/sampler
+	AllocatedImage _whiteImage;
+	AllocatedImage _blackImage;
+	AllocatedImage _greyImage;
+	AllocatedImage _errorCheckerboardImage;
+
+	VkSampler _defaultSamplerLinear;
+	VkSampler _defaultSamplerNearest;
+
+
 private:
 
 	//VulkanInitialization
@@ -215,6 +225,11 @@ private:
 	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function); //Immediate submit
 	void init_imgui(); //ImGui init
 	void init_default_data(); //default resources init
+
+	//textures
+	AllocatedImage create_image(VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped = false);
+	AllocatedImage create_image(void* data, VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped = false);
+	void destroy_image(const AllocatedImage& img);
 
 };
 
