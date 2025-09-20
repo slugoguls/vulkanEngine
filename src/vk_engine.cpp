@@ -1165,7 +1165,7 @@ void VulkanEngine::init_default_data() {
         });
 	*/
 
-    testMeshes = loadGltfMeshes(this, "..\\assets\\basicmesh.glb").value();
+    //testMeshes = loadGltfMeshes(this, "..\\assets\\basicmesh.glb").value();
 
     //3 default textures, white, grey, black. 1 pixel each
     uint32_t white = glm::packUnorm4x8(glm::vec4(1, 1, 1, 1));
