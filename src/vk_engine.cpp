@@ -59,6 +59,14 @@ void VulkanEngine::init()
 
     // everything went fine
     _isInitialized = true;
+    
+
+	//setup camera
+    mainCamera.velocity = glm::vec3(0.f);
+    mainCamera.position = glm::vec3(0, 0, 5);
+
+    mainCamera.pitch = 0;
+    mainCamera.yaw = 0;
 
 }
 
@@ -375,6 +383,10 @@ void VulkanEngine::run()
                     stop_rendering = false;
                 }
             }
+
+			//send sdl events to the camera
+            mainCamera.processSDLEvent(e);
+
             //send SDL event to imgui for handling
             ImGui_ImplSDL2_ProcessEvent(&e);
         }
@@ -1446,17 +1458,31 @@ void MeshNode::Draw(const glm::mat4& topMatrix, DrawContext& ctx)
 void VulkanEngine::update_scene()
 {
     mainDrawContext.OpaqueSurfaces.clear();
+    mainCamera.update();
 
-    loadedNodes["Suzanne"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
+    glm::mat4 view = mainCamera.getViewMatrix();
 
-    sceneData.view = glm::translate(glm::vec3{ 0,0,-5 });
     // camera projection
-    sceneData.proj = glm::perspective(glm::radians(70.f), (float)_windowExtent.width / (float)_windowExtent.height, 10000.f, 0.1f);
+    glm::mat4 projection = glm::perspective(glm::radians(70.f), (float)_windowExtent.width / (float)_windowExtent.height, 10000.f, 0.1f);
 
     // invert the Y direction on projection matrix so that we are more similar
     // to opengl and gltf axis
-    sceneData.proj[1][1] *= -1;
-    sceneData.viewproj = sceneData.proj * sceneData.view;
+    projection[1][1] *= -1;
+
+    sceneData.view = view;
+    sceneData.proj = projection;
+    sceneData.viewproj = projection * view;
+
+    loadedNodes["Suzanne"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
+
+    //sceneData.view = glm::translate(glm::vec3{ 0,0,-5 });
+    // camera projection
+    //sceneData.proj = glm::perspective(glm::radians(70.f), (float)_windowExtent.width / (float)_windowExtent.height, 10000.f, 0.1f);
+
+    // invert the Y direction on projection matrix so that we are more similar
+    // to opengl and gltf axis
+    //sceneData.proj[1][1] *= -1;
+    //sceneData.viewproj = sceneData.proj * sceneData.view;
 
     //some default lighting parameters
     sceneData.ambientColor = glm::vec4(.1f);

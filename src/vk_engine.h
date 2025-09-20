@@ -7,6 +7,7 @@
 #include <vk_descriptors.h>
 
 #include <vk_loader.h>// for loading meshes
+#include <camera.h> // for the camera class
 
 //constants
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -255,6 +256,9 @@ public:
 	//Scene graph
 	DrawContext mainDrawContext;
 	std::unordered_map<std::string, std::shared_ptr<Node>> loadedNodes;
+
+	//camera
+	Camera mainCamera;
 
 
 private:
