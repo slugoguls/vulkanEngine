@@ -231,6 +231,8 @@ public:
 	GPUMeshBuffers rectangle;
 	GPUMeshBuffers uploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices); //uploads a mesh to the gpu and returns a struct containing the buffers
 
+	AllocatedBuffer create_buffer(size_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
+
 	//test meshes
 	std::vector<std::shared_ptr<MeshAsset>> testMeshes;
 
@@ -261,6 +263,10 @@ public:
 	Camera mainCamera;
 
 
+	//Loaded GLTF scenes
+	std::unordered_map<std::string, std::shared_ptr<LoadedGLTF>> loadedScenes;
+
+
 private:
 
 	//VulkanInitialization
@@ -289,7 +295,6 @@ private:
 	void init_mesh_pipeline();
 
 	//buffer functions
-	AllocatedBuffer create_buffer(size_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
 	void destroy_buffer(const AllocatedBuffer& buffer);
 
 	//helper functions
