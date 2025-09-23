@@ -10,7 +10,7 @@ struct LoadedGLTF;
 #include <camera.h> // for the camera class
 
 //constants
-constexpr unsigned int FRAME_OVERLAP = 3;
+constexpr unsigned int FRAME_OVERLAP = 2;
 
 
 // Simple deletion queue for vulkan resources
