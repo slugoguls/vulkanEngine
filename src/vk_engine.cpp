@@ -63,10 +63,17 @@ void VulkanEngine::init()
 
 	//setup camera
     mainCamera.velocity = glm::vec3(0.f);
-    mainCamera.position = glm::vec3(0, 0, 5);
+    mainCamera.position = glm::vec3(30.f, -00.f, -085.f);
 
     mainCamera.pitch = 0;
     mainCamera.yaw = 0;
+
+    std::string structurePath = { "..\\assets\\structure.glb" };
+    auto structureFile = loadGltf(this,structurePath);
+
+    assert(structureFile.has_value());
+
+    loadedScenes["structure"] = *structureFile;
 
 }
 
@@ -76,6 +83,8 @@ void VulkanEngine::cleanup()
 
 		// wait until the device is idle before destroying everything
 		vkDeviceWaitIdle(_device);
+
+        loadedScenes.clear();
 
 		// destroy per-frame resources
         // destroy command pool
@@ -1092,40 +1101,6 @@ GPUMeshBuffers VulkanEngine::uploadMesh(std::span<uint32_t> indices, std::span<V
 //Default data init
 void VulkanEngine::init_default_data() {
     
-    /*
-	//create a rectangle mesh to draw with our mesh pipeline
-    std::array<Vertex, 4> rect_vertices;
-
-    rect_vertices[0].position = { 0.5,-0.5, 0 };
-    rect_vertices[1].position = { 0.5,0.5, 0 };
-    rect_vertices[2].position = { -0.5,-0.5, 0 };
-    rect_vertices[3].position = { -0.5,0.5, 0 };
-
-    rect_vertices[0].color = { 0,0, 0,1 };
-    rect_vertices[1].color = { 0.5,0.5,0.5 ,1 };
-    rect_vertices[2].color = { 1,0, 0,1 };
-    rect_vertices[3].color = { 0,1, 0,1 };
-
-    std::array<uint32_t, 6> rect_indices;
-
-    rect_indices[0] = 0;
-    rect_indices[1] = 1;
-    rect_indices[2] = 2;
-
-    rect_indices[3] = 2;
-    rect_indices[4] = 1;
-    rect_indices[5] = 3;
-
-    rectangle = uploadMesh(rect_indices, rect_vertices);
-
-    //delete the rectangle data on engine shutdown
-    _mainDeletionQueue.push_function([&]() {
-        destroy_buffer(rectangle.indexBuffer);
-        destroy_buffer(rectangle.vertexBuffer);
-        });
-	*/
-
-    testMeshes = loadGltfMeshes(this, "..\\assets\\basicmesh.glb").value();
 
     //3 default textures, white, grey, black. 1 pixel each
     uint32_t white = glm::packUnorm4x8(glm::vec4(1, 1, 1, 1));
@@ -1440,28 +1415,8 @@ void VulkanEngine::update_scene()
     sceneData.proj = projection;
     sceneData.viewproj = projection * view;
 
-    loadedNodes["Suzanne"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
-
-    //sceneData.view = glm::translate(glm::vec3{ 0,0,-5 });
-    // camera projection
-    //sceneData.proj = glm::perspective(glm::radians(70.f), (float)_windowExtent.width / (float)_windowExtent.height, 10000.f, 0.1f);
-
-    // invert the Y direction on projection matrix so that we are more similar
-    // to opengl and gltf axis
-    //sceneData.proj[1][1] *= -1;
-    //sceneData.viewproj = sceneData.proj * sceneData.view;
+    loadedScenes["structure"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
 
     //some default lighting parameters
-    sceneData.ambientColor = glm::vec4(.1f);
-    sceneData.sunlightColor = glm::vec4(1.f);
-    sceneData.sunlightDirection = glm::vec4(0, 1, 0.5, 1.f);
-
-    for (int x = -3; x < 3; x++) {
-
-        glm::mat4 scale = glm::scale(glm::vec3{ 0.2 });
-        glm::mat4 translation = glm::translate(glm::vec3{ x, 1, 0 });
-
-        loadedNodes["Cube"]->Draw(translation * scale, mainDrawContext);
-    }
 
 }
