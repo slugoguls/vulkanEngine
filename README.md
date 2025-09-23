@@ -36,7 +36,7 @@ To build this project, you will need CMake and a C++ compiler that supports C++1
 1.  **Install Vulkan SDK:** Ensure you have the Vulkan SDK installed and configured on your system.
 2.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/vulkanEngine.git
+    git clone https://github.com/slugoguls/vulkanEngine.git
     cd vulkanEngine
     ```
 3.  **Configure CMake:**
