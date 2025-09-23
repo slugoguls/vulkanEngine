@@ -54,7 +54,6 @@ To build this project, you will need CMake and a C++ compiler that supports C++1
 After building, you can run the engine from the `bin` directory:
 
 ```bash
-./bin/vulkan_guide # On Linux/macOS
 .\bin\vulkan_guide.exe # On Windows
 ```
 
