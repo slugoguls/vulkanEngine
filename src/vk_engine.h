@@ -6,7 +6,7 @@
 #include <vk_types.h>
 #include <vk_descriptors.h>
 
-#include <vk_loader.h>// for loading meshes
+struct LoadedGLTF;
 #include <camera.h> // for the camera class
 
 //constants
@@ -79,6 +79,7 @@ struct ComputeEffect {
 
 
 //Material system
+class VulkanEngine;
 struct GLTFMetallic_Roughness {
 	MaterialPipeline opaquePipeline;
 	MaterialPipeline transparentPipeline;
@@ -110,14 +111,7 @@ struct GLTFMetallic_Roughness {
 };
 
 
-//Scene graph system
-//draw Mesh node
-struct MeshNode : public Node {
 
-	std::shared_ptr<MeshAsset> mesh;
-
-	virtual void Draw(const glm::mat4& topMatrix, DrawContext& ctx) override;
-};
 
 struct RenderObject {
 	uint32_t indexCount;
@@ -262,6 +256,14 @@ public:
 	//camera
 	Camera mainCamera;
 
+	//buffer functions
+	AllocatedBuffer create_buffer(size_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
+	void destroy_buffer(const AllocatedBuffer& buffer);
+
+	//textures
+	AllocatedImage create_image(VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped = false);
+	AllocatedImage create_image(void* data, VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped = false);
+	void destroy_image(const AllocatedImage& img);
 
 private:
 
@@ -290,19 +292,10 @@ private:
 	//void init_triangle_pipeline();
 	void init_mesh_pipeline();
 
-	//buffer functions
-	AllocatedBuffer create_buffer(size_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
-	void destroy_buffer(const AllocatedBuffer& buffer);
-
 	//helper functions
 	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function); //Immediate submit
 	void init_imgui(); //ImGui init
 	void init_default_data(); //default resources init
-
-	//textures
-	AllocatedImage create_image(VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped = false);
-	AllocatedImage create_image(void* data, VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped = false);
-	void destroy_image(const AllocatedImage& img);
 
 	//scene functions
 	void update_scene();

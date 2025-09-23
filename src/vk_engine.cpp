@@ -1,5 +1,6 @@
 ﻿//> includes
 #include "vk_engine.h"
+#include <vk_loader.h>
 
 #include <SDL.h>
 #include <SDL_vulkan.h>

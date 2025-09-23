@@ -8,34 +8,7 @@
 struct DrawContext;
 class VulkanEngine;
 
-class IRenderable {
-public:
-    virtual ~IRenderable() = default;
-    virtual void Draw(const glm::mat4& topMatrix, DrawContext& ctx) = 0;
-};
 
-class Node : public IRenderable {
-public:
-    // parent pointer must be a weak pointer to avoid circular dependencies
-    std::weak_ptr<Node> parent;
-    std::vector<std::shared_ptr<Node>> children;
-
-    glm::mat4 localTransform;
-    glm::mat4 worldTransform;
-
-    void refreshTransform(const glm::mat4& parentMatrix) {
-        worldTransform = parentMatrix * localTransform;
-        for (auto c : children) {
-            c->refreshTransform(worldTransform);
-        }
-    }
-
-    virtual void Draw(const glm::mat4& topMatrix, DrawContext& ctx) {
-        for (auto& c : children) {
-            c->Draw(topMatrix, ctx);
-        }
-    }
-};
 
 struct GLTFMaterial {
     MaterialInstance data;
