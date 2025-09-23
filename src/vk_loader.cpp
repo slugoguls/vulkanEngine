@@ -21,7 +21,29 @@ void LoadedGLTF::Draw(const glm::mat4& topMatrix, DrawContext& ctx)
 
 void LoadedGLTF::clearAll()
 {
-    // Left empty for now
+	vkDeviceWaitIdle(creator->_device);
+
+    for (auto& [k, v] : meshes) {
+
+        creator->destroy_buffer(v->meshBuffers.indexBuffer);
+        creator->destroy_buffer(v->meshBuffers.vertexBuffer);
+    }
+
+    for (auto& [k, v] : images) {
+
+        if (v.image == creator->_errorCheckerboardImage.image) {
+            continue;
+        }
+        creator->destroy_image(v);
+    }
+
+    for (auto& sampler : samplers) {
+        vkDestroySampler(creator->_device, sampler, nullptr);
+    }
+
+    creator->destroy_buffer(materialDataBuffer);
+
+    descriptorPool.destroy_pools(creator->_device);
 }
 
 VkFilter extract_filter(fastgltf::Filter filter)
