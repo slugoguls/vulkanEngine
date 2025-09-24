@@ -25,7 +25,7 @@
 #include <chrono>
 #include <thread>
 
-constexpr bool bUseValidationLayers{ true };
+constexpr bool bUseValidationLayers{ false };
 VulkanEngine* loadedEngine = nullptr;
 
 VulkanEngine& VulkanEngine::Get() { return *loadedEngine; }
@@ -413,6 +413,15 @@ void VulkanEngine::run()
             ImGui::InputFloat4("data3", (float*)&selected.data.data3);
             ImGui::InputFloat4("data4", (float*)&selected.data.data4);
         }
+        ImGui::End();
+
+        ImGui::Begin("Stats");
+
+        ImGui::Text("frametime %f ms", stats.frametime);
+        ImGui::Text("draw time %f ms", stats.mesh_draw_time);
+        ImGui::Text("update time %f ms", stats.scene_update_time);
+        ImGui::Text("triangles %i", stats.triangle_count);
+        ImGui::Text("draws %i", stats.drawcall_count);
         ImGui::End();
 
         ImGui::Render();
