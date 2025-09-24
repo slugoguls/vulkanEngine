@@ -77,6 +77,15 @@ struct ComputeEffect {
 	ComputePushConstants data;
 };
 
+//Engine statistics
+struct EngineStats {
+	float frametime;
+	int triangle_count;
+	int drawcall_count;
+	float scene_update_time;
+	float mesh_draw_time;
+};
+
 
 //Material system
 class VulkanEngine;
