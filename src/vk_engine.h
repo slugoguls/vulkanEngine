@@ -5,7 +5,7 @@
 
 #include <vk_types.h>
 #include <vk_descriptors.h>
-
+#include<vk_loader.h>
 struct LoadedGLTF;
 #include <camera.h> // for the camera class
 
@@ -128,7 +128,7 @@ struct RenderObject {
 	VkBuffer indexBuffer;
 
 	MaterialInstance* material;
-
+	Bounds bounds;
 	glm::mat4 transform;
 	VkDeviceAddress vertexBufferAddress;
 };

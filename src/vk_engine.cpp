@@ -25,6 +25,47 @@
 #include <chrono>
 #include <thread>
 
+
+//globals
+bool is_visible(const RenderObject& obj, const glm::mat4& viewproj) {
+    std::array<glm::vec3, 8> corners{
+        glm::vec3 { 1, 1, 1 },
+        glm::vec3 { 1, 1, -1 },
+        glm::vec3 { 1, -1, 1 },
+        glm::vec3 { 1, -1, -1 },
+        glm::vec3 { -1, 1, 1 },
+        glm::vec3 { -1, 1, -1 },
+        glm::vec3 { -1, -1, 1 },
+        glm::vec3 { -1, -1, -1 },
+    };
+
+    glm::mat4 matrix = viewproj * obj.transform;
+
+    glm::vec3 min = { 1.5, 1.5, 1.5 };
+    glm::vec3 max = { -1.5, -1.5, -1.5 };
+
+    for (int c = 0; c < 8; c++) {
+        // project each corner into clip space
+        glm::vec4 v = matrix * glm::vec4(obj.bounds.origin + (corners[c] * obj.bounds.extents), 1.f);
+
+        // perspective correction
+        v.x = v.x / v.w;
+        v.y = v.y / v.w;
+        v.z = v.z / v.w;
+
+        min = glm::min(glm::vec3{ v.x, v.y, v.z }, min);
+        max = glm::max(glm::vec3{ v.x, v.y, v.z }, max);
+    }
+
+    // check the clip space box is within the view
+    if (min.z > 1.f || max.z < 0.f || min.x > 1.f || max.x < -1.f || min.y > 1.f || max.y < -1.f) {
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
 constexpr bool bUseValidationLayers{ false };
 VulkanEngine* loadedEngine = nullptr;
 
@@ -262,8 +303,10 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
     std::vector<uint32_t> opaque_draws;
     opaque_draws.reserve(mainDrawContext.OpaqueSurfaces.size());
 
-    for (uint32_t i = 0; i < mainDrawContext.OpaqueSurfaces.size(); i++) {
-        opaque_draws.push_back(i);
+    for (int i = 0; i < mainDrawContext.OpaqueSurfaces.size(); i++) {
+        if (is_visible(mainDrawContext.OpaqueSurfaces[i], sceneData.viewproj)) {
+            opaque_draws.push_back(i);
+        }
     }
 
     // sort the opaque surfaces by material and mesh
@@ -1481,8 +1524,7 @@ MaterialInstance GLTFMetallic_Roughness::write_material(VkDevice device, Materia
 
 
 //Scene drawing functions
-void MeshNode::Draw(const glm::mat4& topMatrix, DrawContext& ctx)
-{
+void MeshNode::Draw(const glm::mat4& topMatrix, DrawContext& ctx) {
     glm::mat4 nodeMatrix = topMatrix * worldTransform;
 
     for (auto& s : mesh->surfaces) {
@@ -1491,11 +1533,16 @@ void MeshNode::Draw(const glm::mat4& topMatrix, DrawContext& ctx)
         def.firstIndex = s.startIndex;
         def.indexBuffer = mesh->meshBuffers.indexBuffer.buffer;
         def.material = &s.material->data;
-
+        def.bounds = s.bounds;
         def.transform = nodeMatrix;
         def.vertexBufferAddress = mesh->meshBuffers.vertexBufferAddress;
 
-        ctx.OpaqueSurfaces.push_back(def);
+        if (s.material->data.passType == MaterialPass::Transparent) {
+            ctx.TransparentSurfaces.push_back(def);
+        }
+        else {
+            ctx.OpaqueSurfaces.push_back(def);
+        }
     }
 
     // recurse down
@@ -1534,3 +1581,9 @@ void VulkanEngine::update_scene()
 
 
 }
+
+
+
+
+
+
