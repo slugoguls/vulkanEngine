@@ -1338,7 +1338,7 @@ void VulkanEngine::init_default_data() {
         VK_IMAGE_USAGE_SAMPLED_BIT);
 
     sceneData.ambientColor = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f); // A small amount of ambient light
-    sceneData.sunlightDirection = glm::vec4(-10.0f, 10.0f, -10.0f, 1.0f); // Light from top
+    sceneData.sunlightDirection = glm::vec4(-10.0f, 10.0f, 10.0f, 1.0f); // Light from top
     sceneData.sunlightColor = glm::vec4(1.0f, 0.6f, 0.2f, 0.005f); // White light with full intensity
 
     VkSamplerCreateInfo sampl = { .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
@@ -1654,13 +1654,14 @@ void VulkanEngine::update_scene()
         loadedScenes["Tree"]->Draw(treeMatrix, mainDrawContext);
     }
     if (loadedScenes.count("chest")) {
-        glm::mat4 chestTranslation = glm::translate(glm::mat4{ 1.f }, glm::vec3(2.2f, 6.85f, 11.f));
+        glm::mat4 chestTranslation = glm::translate(glm::mat4{ 1.f }, glm::vec3(2.9f, 6.85f, 9.8f));
         glm::mat4 ChestScaleMat = glm::scale(glm::mat4{ 1.f }, glm::vec3(_chestScale));
     
         // Add rotation around the X axis 
-        glm::mat4 chestRotationMat = glm::rotate(glm::mat4{ 1.f }, glm::radians(180.0f), glm::vec3(1.f, 0.f, 0.f));
+        glm::mat4 chestRotationMat = glm::rotate(glm::mat4{ 1.f }, glm::radians(90.0f), glm::vec3(1.f, 0.f, 0.f));
+        glm::mat4 chestRotationMatY = glm::rotate(glm::mat4{ 1.f }, glm::radians(-90.0f), glm::vec3(0.f, 0.f, 1.f));
         // Combine matrices in Translate * Rotate * Scale order
-        glm::mat4 chestMatrix = chestTranslation * chestRotationMat * ChestScaleMat;
+        glm::mat4 chestMatrix = chestTranslation * chestRotationMat * chestRotationMatY * ChestScaleMat;
     
         loadedScenes["chest"]->Draw(chestMatrix, mainDrawContext);
     }
