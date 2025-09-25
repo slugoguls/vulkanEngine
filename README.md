@@ -1,6 +1,6 @@
-# Vulkan Game Engine
+# Vulkan Engine
 
-This is a basic Vulkan game engine, based on the [vkguide.dev](https://vkguide.dev/) template, demonstrating core Vulkan rendering concepts and modern C++ practices.
+This is a basic Vulkan engine, based on the [vkguide.dev](https://vkguide.dev/) template, demonstrating core Vulkan rendering concepts and modern C++ practices.
 
 ![SpaceBlock](ss.png)
 
