@@ -261,6 +261,7 @@ public:
 	DrawContext mainDrawContext;
 	std::vector<RenderObject> _renderables;
 	float _treeScale{1.f};
+	float _chestScale{ 0.01f };
 	std::unordered_map<std::string, std::shared_ptr<Node>> loadedNodes;
 
 	std::unordered_map<std::string, std::shared_ptr<LoadedGLTF>> loadedScenes;

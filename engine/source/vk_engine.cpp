@@ -116,18 +116,22 @@ void VulkanEngine::init()
     //load the base scene
     std::string structurePath = { "..\\assets\\DirtBlock.glb" };
 	std::string TreePath = { "..\\assets\\Oaky.glb" };
+    std::string ChestPath = { "..\\assets\\chest.glb" };
 
 
     auto TreeFile = loadGltf(this, TreePath);
     auto structureFile = loadGltf(this,structurePath);
+    auto ChestFile = loadGltf(this, ChestPath);
     assert(structureFile.has_value());
     assert(TreeFile.has_value());
+    assert(ChestFile.has_value());
 
     //get the first mesh from the file
     std::shared_ptr<MeshAsset> dirtMesh = structureFile.value()->meshes.begin()->second;
 
 	loadedScenes["dirtBlock"] = structureFile.value();
     loadedScenes["Tree"] = TreeFile.value();
+    loadedScenes["chest"] = ChestFile.value();
 
 
     // Use the mesh bounds to determine the spacing between cubes
@@ -173,7 +177,7 @@ void VulkanEngine::init()
     // Start z from 1 to avoid placing a cube inside the other wall.
     for (int z = 1; z < 6; ++z) {
         for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < 4; ++x) {
+            for (int x = 0; x < 3; ++x) {
                 create_cube_at(glm::vec3(x * spacing, y * spacing, z * spacing));
             }
 
@@ -1649,7 +1653,17 @@ void VulkanEngine::update_scene()
         glm::mat4 treeMatrix = treeTranslation * treeScaleMat;
         loadedScenes["Tree"]->Draw(treeMatrix, mainDrawContext);
     }
-
+    if (loadedScenes.count("chest")) {
+        glm::mat4 chestTranslation = glm::translate(glm::mat4{ 1.f }, glm::vec3(2.2f, 6.85f, 11.f));
+        glm::mat4 ChestScaleMat = glm::scale(glm::mat4{ 1.f }, glm::vec3(_chestScale));
+    
+        // Add rotation around the X axis 
+        glm::mat4 chestRotationMat = glm::rotate(glm::mat4{ 1.f }, glm::radians(180.0f), glm::vec3(1.f, 0.f, 0.f));
+        // Combine matrices in Translate * Rotate * Scale order
+        glm::mat4 chestMatrix = chestTranslation * chestRotationMat * ChestScaleMat;
+    
+        loadedScenes["chest"]->Draw(chestMatrix, mainDrawContext);
+    }
 
     auto end = std::chrono::system_clock::now();
     //convert to microseconds (integer), and then come back to miliseconds
