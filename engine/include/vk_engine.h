@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <vk_types.h>
-#include <vk_descriptors.h>
-#include<vk_loader.h>
+#include <include/vk_types.h>
+#include <include/vk_descriptors.h>
+#include<include/vk_loader.h>
 struct LoadedGLTF;
-#include <camera.h> // for the camera class
+#include <include/camera.h> // for the camera class
 
 //constants
 constexpr unsigned int FRAME_OVERLAP = 2;
