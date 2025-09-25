@@ -105,17 +105,66 @@ void VulkanEngine::init()
 
 	//setup camera
     mainCamera.velocity = glm::vec3(0.f);
-    mainCamera.position = glm::vec3(30.f, -00.f, -085.f);
+    mainCamera.position = glm::vec3(0.f, 20.f, 30.f);
 
     mainCamera.pitch = 0;
     mainCamera.yaw = 0;
 
-    std::string structurePath = { "..\\assets\\structure.glb" };
-    auto structureFile = loadGltf(this,structurePath);
 
+    //load the base scene
+    std::string structurePath = { "..\\assets\\DirtBlock.glb" };
+
+    auto structureFile = loadGltf(this,structurePath);
     assert(structureFile.has_value());
 
-    loadedScenes["structure"] = *structureFile;
+    //get the first mesh from the file
+    std::shared_ptr<MeshAsset> dirtMesh = structureFile.value()->meshes.begin()->second;
+
+	loadedScenes["dirtBlock"] = structureFile.value(); 
+
+    // Use the mesh bounds to determine the spacing between cubes
+    // We get the size of the cube from its bounding box
+	float spacing = dirtMesh->surfaces[0].bounds.extents.x * 2.f;
+
+    auto create_cube_at = [&](glm::vec3 position) {
+        glm::mat4 transform = glm::translate(glm::mat4(1.f), position);
+        for (auto& surface : dirtMesh->surfaces) {
+            RenderObject ro;
+            ro.bounds = surface.bounds;
+            ro.firstIndex = surface.startIndex;
+            ro.indexCount = surface.count;
+            ro.indexBuffer = dirtMesh->meshBuffers.indexBuffer.buffer;
+            ro.vertexBufferAddress = dirtMesh->meshBuffers.vertexBufferAddress;
+            ro.material = &surface.material->data;
+            ro.transform = transform;
+            _renderables.push_back(ro);
+        }
+    };
+
+    // Define the L-shape WALL dimensions
+    const int length = 7;
+    const int height = 5;
+
+    // Create the long wall (X-axis)
+    for (int x = 0; x < length; ++x) {
+        for (int y = 0; y < height; ++y) {
+            for (int z = 0; z < 3; ++z) {
+                create_cube_at(glm::vec3(x * spacing, y * spacing, z * spacing));
+            }
+
+        }
+    }
+
+    // Create the short wall (Z-axis) connected to the first one.
+    // Start z from 1 to avoid placing a cube inside the other wall.
+    for (int z = 1; z < 6; ++z) {
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < 4; ++x) {
+                create_cube_at(glm::vec3(x * spacing, y * spacing, z * spacing));
+            }
+
+        }
+    }
 
 }
 
@@ -1575,7 +1624,10 @@ void VulkanEngine::update_scene()
     sceneData.proj = projection;
     sceneData.viewproj = projection * view;
 
-    loadedScenes["structure"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
+	//add all renderable nodes to the draw list
+    for (const auto& r : _renderables) {
+		mainDrawContext.OpaqueSurfaces.push_back(r);
+    }
 
     auto end = std::chrono::system_clock::now();
     //convert to microseconds (integer), and then come back to miliseconds
