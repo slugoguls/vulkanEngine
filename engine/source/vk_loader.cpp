@@ -32,7 +32,7 @@ void LoadedGLTF::clearAll()
         creator->destroy_buffer(v->meshBuffers.vertexBuffer);
     }
 
-    for (auto& [k, v] : images) {
+    for (auto& v : images) {
         
         if (v.image == creator->_errorCheckerboardImage.image) {
             //dont destroy the default images
@@ -228,7 +228,7 @@ std::optional<std::shared_ptr<LoadedGLTF>> loadGltf(VulkanEngine* engine,std::st
     // temporal arrays for all the objects to use while creating the GLTF data
     std::vector<std::shared_ptr<MeshAsset>> meshes;
     std::vector<std::shared_ptr<Node>> nodes;
-    std::vector<AllocatedImage> images;
+
     std::vector<std::shared_ptr<GLTFMaterial>> materials;
 
     // load all textures
@@ -236,14 +236,13 @@ std::optional<std::shared_ptr<LoadedGLTF>> loadGltf(VulkanEngine* engine,std::st
         std::optional<AllocatedImage> img = load_image(engine, gltf, image);
 
         if (img.has_value()) {
-            images.push_back(*img);
-            file.images[image.name.c_str()] = *img;
+            file.images.push_back(*img);
             fmt::print("Loaded texture: {}\n", image.name.c_str()); // Debug print
         }
         else {
             // we failed to load, so lets give the slot a default white texture to not
             // completely break loading
-            images.push_back(engine->_errorCheckerboardImage);
+            file.images.push_back(engine->_errorCheckerboardImage);
             std::cout << "gltf failed to load texture " << image.name << std::endl;
             fmt::print("Failed to load texture: {}\n", image.name.c_str()); // Debug print
         }
@@ -291,7 +290,7 @@ std::optional<std::shared_ptr<LoadedGLTF>> loadGltf(VulkanEngine* engine,std::st
             size_t img = gltf.textures[mat.pbrData.baseColorTexture.value().textureIndex].imageIndex.value();
             size_t sampler = gltf.textures[mat.pbrData.baseColorTexture.value().textureIndex].samplerIndex.value();
 
-            materialResources.colorImage = images[img];
+            materialResources.colorImage = file.images[img];
             materialResources.colorSampler = file.samplers[sampler];
         }
         // build material

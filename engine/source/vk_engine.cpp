@@ -113,15 +113,20 @@ void VulkanEngine::init()
 
     //load the base scene
     std::string structurePath = { "..\\assets\\DirtBlock.glb" };
-	std::string TreePath = { "..\\assets\\.glb" };
+	std::string TreePath = { "..\\assets\\Oaky.glb" };
 
+
+    auto TreeFile = loadGltf(this, TreePath);
     auto structureFile = loadGltf(this,structurePath);
     assert(structureFile.has_value());
+    assert(TreeFile.has_value());
 
     //get the first mesh from the file
     std::shared_ptr<MeshAsset> dirtMesh = structureFile.value()->meshes.begin()->second;
 
-	loadedScenes["dirtBlock"] = structureFile.value(); 
+	loadedScenes["dirtBlock"] = structureFile.value();
+    loadedScenes["Tree"] = TreeFile.value();
+
 
     // Use the mesh bounds to determine the spacing between cubes
     // We get the size of the cube from its bounding box
@@ -1629,6 +1634,12 @@ void VulkanEngine::update_scene()
     for (const auto& r : _renderables) {
 		mainDrawContext.OpaqueSurfaces.push_back(r);
     }
+
+    if (loadedScenes.count("Tree")) {
+        glm::mat4 treeMatrix = glm::translate(glm::mat4{ 1.f }, glm::vec3(20.f, 0.f, 0.f));
+        loadedScenes["Tree"]->Draw(treeMatrix, mainDrawContext);
+    }
+
 
     auto end = std::chrono::system_clock::now();
     //convert to microseconds (integer), and then come back to miliseconds
