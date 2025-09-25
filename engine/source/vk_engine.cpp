@@ -1,6 +1,8 @@
 ﻿//> includes
 #include "include/vk_engine.h"
 #include <include/vk_loader.h>
+#include <algorithm>
+#include <limits>
 
 #include <SDL.h>
 #include <SDL_vulkan.h>
@@ -132,6 +134,12 @@ void VulkanEngine::init()
     // We get the size of the cube from its bounding box
 	float spacing = dirtMesh->surfaces[0].bounds.extents.x * 2.f;
 
+    // --- Set Tree Scale Manually ---
+    // You can change the value here to manually scale the tree.
+    // 1.0f is normal size, 0.5f is half size, 2.0f is double size.
+    _treeScale = 14.0f;
+
+
     auto create_cube_at = [&](glm::vec3 position) {
         glm::mat4 transform = glm::translate(glm::mat4(1.f), position);
         for (auto& surface : dirtMesh->surfaces) {
@@ -149,7 +157,7 @@ void VulkanEngine::init()
 
     // Define the L-shape WALL dimensions
     const int length = 7;
-    const int height = 5;
+    const int height = 3;
 
     // Create the long wall (X-axis)
     for (int x = 0; x < length; ++x) {
@@ -1326,8 +1334,8 @@ void VulkanEngine::init_default_data() {
         VK_IMAGE_USAGE_SAMPLED_BIT);
 
     sceneData.ambientColor = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f); // A small amount of ambient light
-    sceneData.sunlightDirection = glm::vec4(0.0f, 10.0f, 0.0f, 1.0f); // Light from top
-    sceneData.sunlightColor = glm::vec4(1.0f, 0.6f, 0.2f, 0.025f); // White light with full intensity
+    sceneData.sunlightDirection = glm::vec4(-10.0f, 10.0f, -10.0f, 1.0f); // Light from top
+    sceneData.sunlightColor = glm::vec4(1.0f, 0.6f, 0.2f, 0.005f); // White light with full intensity
 
     VkSamplerCreateInfo sampl = { .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 
@@ -1636,7 +1644,9 @@ void VulkanEngine::update_scene()
     }
 
     if (loadedScenes.count("Tree")) {
-        glm::mat4 treeMatrix = glm::translate(glm::mat4{ 1.f }, glm::vec3(20.f, 0.f, 0.f));
+        glm::mat4 treeTranslation = glm::translate(glm::mat4{ 1.f }, glm::vec3(11.f, 0.f, -1.f));
+        glm::mat4 treeScaleMat = glm::scale(glm::mat4{ 1.f }, glm::vec3(_treeScale));
+        glm::mat4 treeMatrix = treeTranslation * treeScaleMat;
         loadedScenes["Tree"]->Draw(treeMatrix, mainDrawContext);
     }
 
