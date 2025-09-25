@@ -113,6 +113,7 @@ void VulkanEngine::init()
 
     //load the base scene
     std::string structurePath = { "..\\assets\\DirtBlock.glb" };
+	std::string TreePath = { "..\\assets\\.glb" };
 
     auto structureFile = loadGltf(this,structurePath);
     assert(structureFile.has_value());
@@ -1319,9 +1320,9 @@ void VulkanEngine::init_default_data() {
     _errorCheckerboardImage = create_image(pixels.data(), VkExtent3D{ 16, 16, 1 }, VK_FORMAT_R8G8B8A8_UNORM,
         VK_IMAGE_USAGE_SAMPLED_BIT);
 
-    sceneData.ambientColor = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f); // A small amount of ambient light
-    sceneData.sunlightDirection = glm::vec4(0.0f, -1.0f, 0.0f, 1.0f); // Light from top
-    sceneData.sunlightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); // White light with full intensity
+    sceneData.ambientColor = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f); // A small amount of ambient light
+    sceneData.sunlightDirection = glm::vec4(0.0f, 10.0f, 0.0f, 1.0f); // Light from top
+    sceneData.sunlightColor = glm::vec4(1.0f, 0.6f, 0.2f, 0.025f); // White light with full intensity
 
     VkSamplerCreateInfo sampl = { .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 
