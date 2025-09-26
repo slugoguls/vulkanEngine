@@ -136,6 +136,13 @@ struct DrawContext {
 	std::vector<RenderObject> TransparentSurfaces;
 };
 
+struct CloudParameters {
+    // x: noise_scale, y: threshold, z: softness, w: density_multiplier
+    glm::vec4 params1{5000.f, 0.5f, 0.2f, 0.015f};
+    // x: total_distance
+    glm::vec4 params2{8000.f, 0.f, 0.f, 0.f};
+};
+
 
 
 class VulkanEngine {
@@ -292,6 +299,8 @@ public:
 	VkPipelineLayout _cloudsPipelineLayout;
 	VkDescriptorSetLayout _cloudsDescriptorLayout;
 	VkDescriptorSet _cloudsDescriptorSet;
+
+	CloudParameters cloud_settings;
 
 private:
 

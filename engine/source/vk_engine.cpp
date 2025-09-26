@@ -275,11 +275,14 @@ void VulkanEngine::draw()
     // Draw the volumetric clouds
     {
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, _cloudsPipeline);
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, _cloudsPipelineLayout, 0, 1, &_cloudsDescriptorSet, 0, nullptr);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, _cloudsPipelineLayout, 0, 1,
+            &_cloudsDescriptorSet, 0, nullptr);
 
         PushConstants push_constants;
         push_constants.invViewProj = glm::inverse(sceneData.viewproj);
         push_constants.cameraPos = glm::vec4(mainCamera.position, 1.f);
+        push_constants.cloud_params1 = cloud_settings.params1;
+        push_constants.cloud_params2 = cloud_settings.params2;
 
         vkCmdPushConstants(cmd, _cloudsPipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
             sizeof(PushConstants), &push_constants);
@@ -579,6 +582,15 @@ void VulkanEngine::run()
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
+        if (ImGui::Begin("Cloud Settings")) {
+            ImGui::SliderFloat("Noise Scale", &cloud_settings.params1.x, 100.f, 10000.f);
+            ImGui::SliderFloat("Threshold", &cloud_settings.params1.y, 0.f, 1.f);
+            ImGui::SliderFloat("Softness", &cloud_settings.params1.z, 0.01f, 1.f);
+            ImGui::SliderFloat("Density Multiplier", &cloud_settings.params1.w, 0.001f, 0.1f, "%.4f");
+            ImGui::SliderFloat("Total Distance", &cloud_settings.params2.x, 1000.f, 20000.f);
+        }
+        ImGui::End();
+
         if (ImGui::Begin("background")) {
 
 			ImGui::SliderFloat("Render Scale", &renderScale, 0.3f, 1.f); // adjust render scale
@@ -872,9 +884,9 @@ void VulkanEngine::init_descriptors()
     //create a descriptor pool that will hold 10 sets with 1 image each
     std::vector<DescriptorAllocatorGrowable::PoolSizeRatio> sizes =
     {
-        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
-        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1},
-        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 }
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3},
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 10 }
     };
 
     globalDescriptorAllocator.init(_device, 10, sizes);

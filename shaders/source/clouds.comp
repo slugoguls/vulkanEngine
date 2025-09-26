@@ -1,25 +1,32 @@
-  #version 450
+#version 450
 
-  layout (local_size_x = 16, local_size_y = 16) in;
+layout (local_size_x = 16, local_size_y = 16) in;
 
-  layout (binding = 0, rgba16f) uniform writeonly image2D outputImage;
-  layout (binding = 1) uniform sampler3D noiseTexture;
+layout (binding = 0, rgba16f) uniform writeonly image2D outputImage;
+layout (binding = 1) uniform sampler3D noiseTexture;
 
-  layout(push_constant) uniform PushConstants {
-      mat4 invViewProj;
-      vec4 cameraPos;
-  } pushConstants;
+layout(push_constant) uniform PushConstants {
+    mat4 invViewProj;
+    vec4 cameraPos;
+    vec4 cloud_params1; // x: noise_scale, y: threshold, z: softness, w: density_multiplier
+    vec4 cloud_params2; // x: total_distance
+} pushConstants;
 
-  // Function to get the ray direction for a given pixel
-  vec3 get_ray_direction(vec2 uv, mat4 invViewProj) {
-      vec4 clip = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
-      vec4 view = invViewProj * clip;
-      view = view / view.w;
-      vec3 world_pos = vec3(view);
-      return normalize(world_pos - pushConstants.cameraPos.xyz);
-  }
+// Simple hash-based random for dithering
+float rand(vec2 co) {
+    return fract(sin(dot(co, vec2(12.9898,78.233))) * 43758.5453);
+}
 
-  void main()
+// Function to get the ray direction for a given pixel
+vec3 get_ray_direction(vec2 uv, mat4 invViewProj) {
+    vec4 clip = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
+    vec4 view = invViewProj * clip;
+    view = view / view.w;
+    vec3 world_pos = vec3(view);
+    return normalize(world_pos - pushConstants.cameraPos.xyz);
+}
+
+void main()
 {
     ivec2 storePos = ivec2(gl_GlobalInvocationID.xy);
     ivec2 size = imageSize(outputImage);
@@ -34,28 +41,46 @@
     vec3 rayDir = get_ray_direction(uv, pushConstants.invViewProj);
 
     float accumulatedDensity = 0.0;
-    int numSteps = 128;
-    float stepSize = 8000.0 / float(numSteps);
+    vec3 accumulatedColor = vec3(0.0);
+
+    // More steps for smoother results
+    int numSteps = 512;
+    float stepSize = pushConstants.cloud_params2.x / float(numSteps);
+
+    // Jitter to avoid banding
+    float jitter = rand(uv * 1024.0) * stepSize;
+
+    vec3 lightDir = normalize(vec3(0.3, 1.0, 0.2)); // simple sun direction
 
     for (int i = 0; i < numSteps; i++) {
-        vec3 currentPos = rayOrigin + rayDir * (float(i) * stepSize);
+        float dist = float(i) * stepSize + jitter;
+        vec3 currentPos = rayOrigin + rayDir * dist;
 
-        // Simple check to only draw clouds in a certain height range
+        // Only render clouds within a height band
         if (currentPos.y > 1000.0 && currentPos.y < 2000.0) {
-            // Sample the 3D noise texture
-            float density = texture(noiseTexture, currentPos / 5000.0).r; // Scale the coordinates to change cloud size
+            // Scale position into noise space
+            float noiseScale = pushConstants.cloud_params1.x;
+            float density = texture(noiseTexture, currentPos / noiseScale).r;
 
-            // Remap the density to create more defined cloud shapes
-            density = smoothstep(0.5, 0.7, density);
+            // Shape adjustment
+            float threshold = pushConstants.cloud_params1.y;
+            float softness  = pushConstants.cloud_params1.z;
+            density = smoothstep(threshold, threshold + softness, density);
 
             if (density > 0.0) {
-                accumulatedDensity += density;
+                float stepDensity = density * stepSize * pushConstants.cloud_params1.w;
+                accumulatedDensity += stepDensity;
+
+                // Very simple single-scattering approximation
+                float lighting = clamp(dot(lightDir, rayDir), 0.0, 1.0);
+                accumulatedColor += vec3(1.0) * stepDensity * (0.5 + 0.5 * lighting);
             }
         }
     }
 
-    // Use the accumulated density to determine the final color
-    vec4 finalColor = vec4(1.0, 1.0, 1.0, accumulatedDensity * 0.015); // The 0.015 is a tweaking factor
+    // Clamp to avoid blowing out
+    accumulatedDensity = clamp(accumulatedDensity, 0.0, 1.0);
 
+    vec4 finalColor = vec4(accumulatedColor, accumulatedDensity);
     imageStore(outputImage, storePos, finalColor);
 }

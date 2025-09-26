@@ -74,6 +74,8 @@ struct GPUDrawPushConstants {
 struct PushConstants {
     glm::mat4 invViewProj;
     glm::vec4 cameraPos;
+    glm::vec4 cloud_params1; // x: noise_scale, y: threshold, z: softness, w: density_multiplier
+    glm::vec4 cloud_params2; // x: total_distance
 };
 
 
