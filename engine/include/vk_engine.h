@@ -321,6 +321,7 @@ private:
 	//scene functions
 	void update_scene();
 
+	void generate_noise_texture(); //generates the noise texture for the background
 
 };
 

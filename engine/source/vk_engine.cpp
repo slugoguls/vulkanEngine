@@ -1358,6 +1358,7 @@ GPUMeshBuffers VulkanEngine::uploadMesh(std::span<uint32_t> indices, std::span<V
 //Default data init
 void VulkanEngine::init_default_data() {
     
+    generate_noise_texture();
 
     //3 default textures, white, grey, black. 1 pixel each
     uint32_t white = glm::packUnorm4x8(glm::vec4(1, 1, 1, 1));
@@ -1718,6 +1719,55 @@ void VulkanEngine::update_scene()
     stats.scene_update_time = elapsed.count() / 1000.f;
 
 
+}
+
+//Noise texture generation function
+void VulkanEngine::generate_noise_texture()
+{
+    // The size of the 3D texture
+    VkExtent3D imageSize = { 128, 128, 128 };
+
+    // Create the 3D image
+    _volumetricCloudsTexture = create_image(imageSize, VK_FORMAT_R8G8B8A8_UNORM,
+        VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, false);
+
+    // Create a descriptor set for the image
+    VkDescriptorSet noiseImageDescriptor;
+    {
+        noiseImageDescriptor = globalDescriptorAllocator.allocate(_device, _drawImageDescriptorLayout);
+
+        DescriptorWriter writer;
+        writer.write_image(0, _volumetricCloudsTexture.imageView, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL,
+            VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+        writer.update_set(_device, noiseImageDescriptor);
+    }
+
+    // Execute the compute shader
+    immediate_submit([&](VkCommandBuffer cmd) {
+        // Transition the image layout to be writable by the compute shader
+        vkutil::transition_image(cmd, _volumetricCloudsTexture.image, VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_GENERAL);
+
+        // Bind the compute pipeline
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, _noisePipeline);
+
+        // Bind the descriptor set
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, _noisePipelineLayout, 0, 1,
+            &noiseImageDescriptor, 0, nullptr);
+
+        // Dispatch the shader
+        // We divide the image size by the workgroup size (8x8x8) to get the number of workgroups
+        vkCmdDispatch(cmd, imageSize.width / 8, imageSize.height / 8, imageSize.width / 8);
+
+        // Transition the image layout to be readable by the graphics pipeline
+        vkutil::transition_image(cmd, _volumetricCloudsTexture.image, VK_IMAGE_LAYOUT_GENERAL,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    });
+
+    // Add the image to the deletion queue
+    _mainDeletionQueue.push_function([&] (){
+        destroy_image(_volumetricCloudsTexture);
+        });
 }
 
 
