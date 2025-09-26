@@ -213,9 +213,6 @@ public:
 	VkPipeline _gradientPipeline;
 	VkPipelineLayout _gradientPipelineLayout;
 
-	VkPipeline _noisePipeline;
-	VkPipelineLayout _noisePipelineLayout;
-
 	// immediate submit structures
 	VkFence _immFence;
 	VkCommandBuffer _immCommandBuffer;
@@ -284,6 +281,18 @@ public:
 	//engine stats
 	EngineStats stats;
 
+	//for noise generation
+	VkPipeline _noisePipeline;
+	VkPipelineLayout _noisePipelineLayout;
+	VkDescriptorSetLayout _noiseDescriptorLayout;
+	VkDescriptorSet _noiseDescriptorSet;
+
+	//for cloud rendering
+	VkPipeline _cloudsPipeline;
+	VkPipelineLayout _cloudsPipelineLayout;
+	VkDescriptorSetLayout _cloudsDescriptorLayout;
+	VkDescriptorSet _cloudsDescriptorSet;
+
 private:
 
 	//VulkanInitialization
@@ -312,6 +321,7 @@ private:
 	void init_mesh_pipeline();
 
 	void init_noise_pipeline();
+	void init_clouds_pipeline();
 
 	//helper functions
 	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function); //Immediate submit

@@ -71,6 +71,11 @@ struct GPUDrawPushConstants {
     VkDeviceAddress vertexBuffer;
 };
 
+struct PushConstants {
+    glm::mat4 invViewProj;
+    glm::vec4 cameraPos;
+};
+
 
 enum class MaterialPass :uint8_t {
     MainColor,
