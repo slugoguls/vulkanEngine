@@ -928,11 +928,14 @@ void VulkanEngine::init_pipelines()
 {
     //COMPUTE PIPELINES	
     init_background_pipelines();
+    init_noise_pipeline();
 
     // GRAPHICS PIPELINES
     //init_triangle_pipeline();
     init_mesh_pipeline();
     metalRoughMaterial.build_pipelines(this);
+
+
 }
 
 void VulkanEngine::init_background_pipelines()
@@ -1142,6 +1145,49 @@ void VulkanEngine::init_mesh_pipeline()
         vkDestroyPipelineLayout(_device, _meshPipelineLayout, nullptr);
         vkDestroyPipeline(_device, _meshPipeline, nullptr);
         });
+}
+
+void VulkanEngine::init_noise_pipeline()
+{
+    //Create the layout for the noise pipeline
+    VkPipelineLayoutCreateInfo noiseLayout{};
+    noiseLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    noiseLayout.pNext = nullptr;
+    noiseLayout.pSetLayouts = &_drawImageDescriptorLayout; // We can reuse this layout since it also has a single storage image
+    noiseLayout.setLayoutCount = 1;
+
+    VK_CHECK(vkCreatePipelineLayout(_device, &noiseLayout, nullptr, &_noisePipelineLayout));
+
+    //Load the shader
+    VkShaderModule noiseShader;
+    if (!vkutil::load_shader_module("../shaders/compiled/noise.comp.spv", _device, &noiseShader)) {
+        fmt::print("Error when building the noise compute shader \n");
+    }
+
+    VkPipelineShaderStageCreateInfo stageinfo{};
+    stageinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stageinfo.pNext = nullptr;
+    stageinfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    stageinfo.module = noiseShader;
+    stageinfo.pName = "main";
+
+    VkComputePipelineCreateInfo computePipelineCreateInfo{};
+    computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    computePipelineCreateInfo.pNext = nullptr;
+    computePipelineCreateInfo.layout = _noisePipelineLayout;
+    computePipelineCreateInfo.stage = stageinfo;
+
+    VK_CHECK(vkCreateComputePipelines(_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr,
+        &_noisePipeline));
+
+    //destroy structures properly
+    vkDestroyShaderModule(_device, noiseShader, nullptr);
+
+    //add the pipeline and layout to the deletion queue
+    _mainDeletionQueue.push_function([&]() {
+        vkDestroyPipelineLayout(_device, _noisePipelineLayout, nullptr);
+        vkDestroyPipeline(_device, _noisePipeline, nullptr);
+    });
 }
 
 

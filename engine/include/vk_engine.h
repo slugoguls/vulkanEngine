@@ -213,6 +213,9 @@ public:
 	VkPipeline _gradientPipeline;
 	VkPipelineLayout _gradientPipelineLayout;
 
+	VkPipeline _noisePipeline;
+	VkPipelineLayout _noisePipelineLayout;
+
 	// immediate submit structures
 	VkFence _immFence;
 	VkCommandBuffer _immCommandBuffer;
@@ -245,6 +248,8 @@ public:
 	AllocatedImage _blackImage;
 	AllocatedImage _greyImage;
 	AllocatedImage _errorCheckerboardImage;
+
+	AllocatedImage _volumetricCloudsTexture;
 
 	VkSampler _defaultSamplerLinear;
 	VkSampler _defaultSamplerNearest;
@@ -305,6 +310,8 @@ private:
 	void init_background_pipelines();
 	//void init_triangle_pipeline();
 	void init_mesh_pipeline();
+
+	void init_noise_pipeline();
 
 	//helper functions
 	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function); //Immediate submit
