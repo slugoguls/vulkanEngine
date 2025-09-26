@@ -120,8 +120,6 @@ struct GLTFMetallic_Roughness {
 };
 
 
-
-
 struct RenderObject {
 	uint32_t indexCount;
 	uint32_t firstIndex;
@@ -154,7 +152,7 @@ public:
 
 	static VulkanEngine& Get();
 
-	//initializes everything in the engine
+	//initializes everything in the engineB
 	void init();
 
 	//shuts down the engine

@@ -24,9 +24,22 @@ void Camera::processSDLEvent(SDL_Event& e)
         if (e.key.keysym.sym == SDLK_d) { velocity.x = 0; }
     }
 
+    if (e.type == SDL_MOUSEBUTTONDOWN) {
+        if (e.button.button == SDL_BUTTON_RIGHT) {
+            isRightMouseButtonDown = true;
+        }
+    }
+    if (e.type == SDL_MOUSEBUTTONUP) {
+        if (e.button.button == SDL_BUTTON_RIGHT) {
+            isRightMouseButtonDown = false;
+        }
+    }
+
     if (e.type == SDL_MOUSEMOTION) {
-        yaw += (float)e.motion.xrel / 200.f;
-        pitch -= (float)e.motion.yrel / 200.f;
+        if (isRightMouseButtonDown) {
+            yaw += (float)e.motion.xrel / 200.f;
+            pitch -= (float)e.motion.yrel / 200.f;
+        }
     }
 }
 
