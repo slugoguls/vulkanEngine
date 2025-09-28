@@ -136,13 +136,6 @@ struct DrawContext {
 	std::vector<RenderObject> TransparentSurfaces;
 };
 
-struct CloudParameters {
-    // x: noise_scale, y: threshold, z: softness, w: density_multiplier
-    glm::vec4 params1{5000.f, 0.5f, 0.2f, 0.015f};
-    // x: total_distance
-    glm::vec4 params2{8000.f, 0.f, 0.f, 0.f};
-};
-
 
 
 class VulkanEngine {
@@ -253,8 +246,6 @@ public:
 	AllocatedImage _greyImage;
 	AllocatedImage _errorCheckerboardImage;
 
-	AllocatedImage _volumetricCloudsTexture;
-
 	VkSampler _defaultSamplerLinear;
 	VkSampler _defaultSamplerNearest;
 
@@ -288,20 +279,6 @@ public:
 	//engine stats
 	EngineStats stats;
 
-	//for noise generation
-	VkPipeline _noisePipeline;
-	VkPipelineLayout _noisePipelineLayout;
-	VkDescriptorSetLayout _noiseDescriptorLayout;
-	VkDescriptorSet _noiseDescriptorSet;
-
-	//for cloud rendering
-	VkPipeline _cloudsPipeline;
-	VkPipelineLayout _cloudsPipelineLayout;
-	VkDescriptorSetLayout _cloudsDescriptorLayout;
-	VkDescriptorSet _cloudsDescriptorSet;
-
-	CloudParameters cloud_settings;
-
 private:
 
 	//VulkanInitialization
@@ -329,9 +306,6 @@ private:
 	//void init_triangle_pipeline();
 	void init_mesh_pipeline();
 
-	void init_noise_pipeline();
-	void init_clouds_pipeline();
-
 	//helper functions
 	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function); //Immediate submit
 	void init_imgui(); //ImGui init
@@ -340,7 +314,6 @@ private:
 	//scene functions
 	void update_scene();
 
-	void generate_noise_texture(); //generates the noise texture for the background
 
 };
 

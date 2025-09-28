@@ -272,24 +272,6 @@ void VulkanEngine::draw()
 
 	draw_background(cmd); // draw the background
 
-    // Draw the volumetric clouds
-    {
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, _cloudsPipeline);
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, _cloudsPipelineLayout, 0, 1,
-            &_cloudsDescriptorSet, 0, nullptr);
-
-        PushConstants push_constants;
-        push_constants.invViewProj = glm::inverse(sceneData.viewproj);
-        push_constants.cameraPos = glm::vec4(mainCamera.position, 1.f);
-        push_constants.cloud_params1 = cloud_settings.params1;
-        push_constants.cloud_params2 = cloud_settings.params2;
-
-        vkCmdPushConstants(cmd, _cloudsPipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
-            sizeof(PushConstants), &push_constants);
-
-        vkCmdDispatch(cmd, std::ceil(_drawExtent.width / 16.0), std::ceil(_drawExtent.height / 16.0), 1);
-    }
-
     //transition the draw image and the swapchain image into their correct transfer layouts
     vkutil::transition_image(cmd, _drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     vkutil::transition_image(cmd, _depthImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
@@ -581,15 +563,6 @@ void VulkanEngine::run()
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
-
-        if (ImGui::Begin("Cloud Settings")) {
-            ImGui::SliderFloat("Noise Scale", &cloud_settings.params1.x, 100.f, 10000.f);
-            ImGui::SliderFloat("Threshold", &cloud_settings.params1.y, 0.f, 1.f);
-            ImGui::SliderFloat("Softness", &cloud_settings.params1.z, 0.01f, 1.f);
-            ImGui::SliderFloat("Density Multiplier", &cloud_settings.params1.w, 0.001f, 0.1f, "%.4f");
-            ImGui::SliderFloat("Total Distance", &cloud_settings.params2.x, 1000.f, 20000.f);
-        }
-        ImGui::End();
 
         if (ImGui::Begin("background")) {
 
@@ -884,9 +857,9 @@ void VulkanEngine::init_descriptors()
     //create a descriptor pool that will hold 10 sets with 1 image each
     std::vector<DescriptorAllocatorGrowable::PoolSizeRatio> sizes =
     {
-        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3 },
-        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3},
-        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 10 }
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1},
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 }
     };
 
     globalDescriptorAllocator.init(_device, 10, sizes);
@@ -955,15 +928,11 @@ void VulkanEngine::init_pipelines()
 {
     //COMPUTE PIPELINES	
     init_background_pipelines();
-    init_noise_pipeline();
-    init_clouds_pipeline();
 
     // GRAPHICS PIPELINES
     //init_triangle_pipeline();
     init_mesh_pipeline();
     metalRoughMaterial.build_pipelines(this);
-
-
 }
 
 void VulkanEngine::init_background_pipelines()
@@ -1175,118 +1144,6 @@ void VulkanEngine::init_mesh_pipeline()
         });
 }
 
-void VulkanEngine::init_noise_pipeline()
-{
-    // Create the descriptor set layout for the noise shader
-    {
-        DescriptorLayoutBuilder builder;
-        builder.add_binding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-        _noiseDescriptorLayout = builder.build(_device, VK_SHADER_STAGE_COMPUTE_BIT);
-    }
-
-    // Create the pipeline layout
-    {
-        VkPipelineLayoutCreateInfo computeLayout{};
-        computeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        computeLayout.pNext = nullptr;
-        computeLayout.pSetLayouts = &_noiseDescriptorLayout;
-        computeLayout.setLayoutCount = 1;
-
-        VK_CHECK(vkCreatePipelineLayout(_device, &computeLayout, nullptr, &_noisePipelineLayout));
-    }
-
-    // Load the shader
-    VkShaderModule noiseShader;
-    if (!vkutil::load_shader_module("../shaders/compiled/noise.comp.spv", _device, &noiseShader)) {
-        fmt::print("Error when building the noise compute shader \n");
-    }
-
-    VkPipelineShaderStageCreateInfo stageinfo{};
-    stageinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    stageinfo.pNext = nullptr;
-    stageinfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-    stageinfo.module = noiseShader;
-    stageinfo.pName = "main";
-
-    VkComputePipelineCreateInfo computePipelineCreateInfo{};
-    computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-    computePipelineCreateInfo.pNext = nullptr;
-    computePipelineCreateInfo.layout = _noisePipelineLayout;
-    computePipelineCreateInfo.stage = stageinfo;
-
-    VK_CHECK(vkCreateComputePipelines(_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &_noisePipeline));
-
-    // Destroy shader module
-    vkDestroyShaderModule(_device, noiseShader, nullptr);
-
-    // Add to deletion queue
-    _mainDeletionQueue.push_function([=]() {
-        vkDestroyPipelineLayout(_device, _noisePipelineLayout, nullptr);
-        vkDestroyPipeline(_device, _noisePipeline, nullptr);
-        vkDestroyDescriptorSetLayout(_device, _noiseDescriptorLayout, nullptr);
-    });
-}
-
-void VulkanEngine::init_clouds_pipeline()
-{
-    // Create the descriptor set layout for the cloud shader
-    {
-        DescriptorLayoutBuilder builder;
-        builder.add_binding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE); // The output image
-        builder.add_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER); // The noise texture sampler
-        _cloudsDescriptorLayout = builder.build(_device, VK_SHADER_STAGE_COMPUTE_BIT);
-    }
-
-    // Create the pipeline layout
-    {
-        VkPushConstantRange pushConstant{};
-        pushConstant.offset = 0;
-        pushConstant.size = sizeof(PushConstants);
-        pushConstant.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-
-        VkPipelineLayoutCreateInfo computeLayout{};
-        computeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        computeLayout.pNext = nullptr;
-        computeLayout.pSetLayouts = &_cloudsDescriptorLayout;
-        computeLayout.setLayoutCount = 1;
-        computeLayout.pPushConstantRanges = &pushConstant;
-        computeLayout.pushConstantRangeCount = 1;
-
-        VK_CHECK(vkCreatePipelineLayout(_device, &computeLayout, nullptr, &_cloudsPipelineLayout));
-    }
-
-    // Load the shader
-    VkShaderModule cloudsShader;
-    if (!vkutil::load_shader_module("../shaders/compiled/clouds.comp.spv", _device, &cloudsShader)) {
-        fmt::print("Error when building the clouds compute shader \n");
-    }
-
-    VkPipelineShaderStageCreateInfo stageinfo{};
-    stageinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    stageinfo.pNext = nullptr;
-    stageinfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-    stageinfo.module = cloudsShader;
-    stageinfo.pName = "main";
-
-    VkComputePipelineCreateInfo computePipelineCreateInfo{};
-    computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-    computePipelineCreateInfo.pNext = nullptr;
-    computePipelineCreateInfo.layout = _cloudsPipelineLayout;
-    computePipelineCreateInfo.stage = stageinfo;
-
-    VK_CHECK(vkCreateComputePipelines(_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &_cloudsPipeline));
-
-    // Destroy shader module
-    vkDestroyShaderModule(_device, cloudsShader, nullptr);
-
-    // Add to deletion queue
-    _mainDeletionQueue.push_function([=]() {
-        vkDestroyPipelineLayout(_device, _cloudsPipelineLayout, nullptr);
-        vkDestroyPipeline(_device, _cloudsPipeline, nullptr);
-        vkDestroyDescriptorSetLayout(_device, _cloudsDescriptorLayout, nullptr);
-    });
-}
-
 
 
 //Vulkan Swapchain functions
@@ -1455,7 +1312,6 @@ GPUMeshBuffers VulkanEngine::uploadMesh(std::span<uint32_t> indices, std::span<V
 //Default data init
 void VulkanEngine::init_default_data() {
     
-    generate_noise_texture();
 
     //3 default textures, white, grey, black. 1 pixel each
     uint32_t white = glm::packUnorm4x8(glm::vec4(1, 1, 1, 1));
@@ -1495,18 +1351,6 @@ void VulkanEngine::init_default_data() {
     sampl.magFilter = VK_FILTER_LINEAR;
     sampl.minFilter = VK_FILTER_LINEAR;
     vkCreateSampler(_device, &sampl, nullptr, &_defaultSamplerLinear);
-
-    // Create the descriptor set for the cloud shader
-    {
-        _cloudsDescriptorSet = globalDescriptorAllocator.allocate(_device, _cloudsDescriptorLayout);
-
-        DescriptorWriter writer;
-        writer.write_image(0, _drawImage.imageView, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL,
-            VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-        writer.write_image(1, _volumetricCloudsTexture.imageView, _defaultSamplerLinear,
-            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-        writer.update_set(_device, _cloudsDescriptorSet);
-    }
 
     _mainDeletionQueue.push_function([&]() {
         vkDestroySampler(_device, _defaultSamplerNearest, nullptr);
@@ -1568,10 +1412,6 @@ AllocatedImage VulkanEngine::create_image(VkExtent3D size, VkFormat format, VkIm
     newImage.imageExtent = size;
 
     VkImageCreateInfo img_info = vkinit::image_create_info(format, usage, size);
-    if (size.depth > 1) {
-        img_info.imageType = VK_IMAGE_TYPE_3D;
-    }
-
     if (mipmapped) {
         img_info.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(size.width, size.height)))) + 1;
     }
@@ -1593,9 +1433,6 @@ AllocatedImage VulkanEngine::create_image(VkExtent3D size, VkFormat format, VkIm
 
     // build a image-view for the image
     VkImageViewCreateInfo view_info = vkinit::imageview_create_info(format, newImage.image, aspectFlag);
-    if (size.depth > 1) {
-        view_info.viewType = VK_IMAGE_VIEW_TYPE_3D;
-    }
     view_info.subresourceRange.levelCount = img_info.mipLevels;
 
     VK_CHECK(vkCreateImageView(_device, &view_info, nullptr, &newImage.imageView));
@@ -1835,53 +1672,6 @@ void VulkanEngine::update_scene()
     stats.scene_update_time = elapsed.count() / 1000.f;
 
 
-}
-
-//Noise texture generation function
-void VulkanEngine::generate_noise_texture()
-{
-    // The size of the 3D texture
-    VkExtent3D imageSize = { 128, 128, 128 };
-
-    // Create the 3D image
-    _volumetricCloudsTexture = create_image(imageSize, VK_FORMAT_R8G8B8A8_UNORM,
-        VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, false);
-
-    // Create a descriptor set for the image
-    _noiseDescriptorSet = globalDescriptorAllocator.allocate(_device, _noiseDescriptorLayout);
-    {
-        DescriptorWriter writer;
-        writer.write_image(0, _volumetricCloudsTexture.imageView, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL,
-            VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-        writer.update_set(_device, _noiseDescriptorSet);
-    }
-
-    // Execute the compute shader
-    immediate_submit([&](VkCommandBuffer cmd) {
-        // Transition the image layout to be writable by the compute shader
-        vkutil::transition_image(cmd, _volumetricCloudsTexture.image, VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_GENERAL);
-
-        // Bind the compute pipeline
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, _noisePipeline);
-
-        // Bind the descriptor set
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, _noisePipelineLayout, 0, 1,
-            &_noiseDescriptorSet, 0, nullptr);
-
-        // Dispatch the shader
-        // We divide the image size by the workgroup size (8x8x8) to get the number of workgroups
-        vkCmdDispatch(cmd, imageSize.width / 8, imageSize.height / 8, imageSize.width / 8);
-
-        // Transition the image layout to be readable by the graphics pipeline
-        vkutil::transition_image(cmd, _volumetricCloudsTexture.image, VK_IMAGE_LAYOUT_GENERAL,
-            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    });
-
-    // Add the image to the deletion queue
-    _mainDeletionQueue.push_function([&] (){
-        destroy_image(_volumetricCloudsTexture);
-    });
 }
 
 
