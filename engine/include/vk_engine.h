@@ -2,6 +2,7 @@
 // or project specific include files.
 
 #pragma once
+#include "primitives/primitives.h"
 
 #include <include/vk_types.h>
 #include <include/vk_descriptors.h>
@@ -279,6 +280,7 @@ public:
 	//engine stats
 	EngineStats stats;
 
+
 private:
 
 	//VulkanInitialization
@@ -313,6 +315,8 @@ private:
 
 	//scene functions
 	void update_scene();
+
+	Cube* cube = nullptr;
 
 
 };

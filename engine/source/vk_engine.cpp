@@ -184,14 +184,22 @@ void VulkanEngine::init()
         }
     }
 
+    cube = new Cube(_device, _physicalDevice, 1.0f);
+
 }
 
 void VulkanEngine::cleanup()
 {
     if (_isInitialized) {
 
+
 		// wait until the device is idle before destroying everything
 		vkDeviceWaitIdle(_device);
+
+        if (cube) {
+            delete cube;
+            cube = nullptr;
+        }
 
         loadedScenes.clear();
 
@@ -277,6 +285,9 @@ void VulkanEngine::draw()
     vkutil::transition_image(cmd, _depthImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
 	draw_geometry(cmd); // draw the triangle
+
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(5.0f, 20.0f, 5.0f));
+    cube->draw(cmd, _meshPipelineLayout, model);
 
     //transtion the draw image and the swapchain image into their correct transfer layouts
     vkutil::transition_image(cmd, _drawImage.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);

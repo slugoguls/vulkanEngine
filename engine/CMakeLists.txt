@@ -17,7 +17,7 @@ add_executable (engine
   "source/vk_loader.cpp"
   "source/camera.cpp"
   "include/camera.h"
- "primitives/Cube/Cube.cpp" "primitives/Cube/Cube.h" "primitives/primitives.h" "primitives/Vertex.h")
+ "primitives/Cube/Cube.cpp" "primitives/Cube/Cube.h" "primitives/primitives.h" "primitives/Vertex.h" "primitives/VulkanHelpers.cpp" "primitives/VulkanHelpers.h")
 
 set_property(TARGET engine PROPERTY CXX_STANDARD 20)
 target_compile_definitions(engine PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE)
